@@ -2,6 +2,8 @@ import os
 
 import streamlit as st
 
+from topic import Topic
+
 
 def main():
     """
@@ -10,7 +12,6 @@ def main():
     st.set_page_config(page_title="Learning Smart", layout="wide")
     set_env()
     homepage()
-
 
 
 def set_env():
@@ -32,6 +33,17 @@ def homepage():
     """
     # Show title and intro
     show_app_title_and_introduction()
+    # Show sidebar
+    show_sidebar()
+    # Get the selected topic
+    topic = get_topic()
+
+
+def get_topic():
+    topic = st.sidebar.selectbox(
+        "Select a topic:",
+        [topic.value for topic in Topic])
+    return topic
 
 
 def show_app_title_and_introduction():
@@ -55,6 +67,10 @@ def show_app_title_and_introduction():
 
             Start your learning journey with LearnSmart today and unlock your full potential in English and Math!
         """)
+
+
+def show_sidebar():
+    st.sidebar.title("LearnSmart")
 
 
 if __name__ == "__main__":

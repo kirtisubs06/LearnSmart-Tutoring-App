@@ -2,6 +2,7 @@ import os
 
 import streamlit as st
 
+from skill import EnglishSkill, MathSkill
 from topic import Topic
 
 
@@ -37,6 +38,8 @@ def homepage():
     show_sidebar()
     # Get the selected topic
     topic = get_topic()
+    # Get the selected Skill
+    skill = get_skill(topic)
 
 
 def get_topic():
@@ -44,6 +47,21 @@ def get_topic():
         "Select a topic:",
         [topic.value for topic in Topic])
     return topic
+
+
+def get_skill(topic):
+    skill = None
+    if topic is Topic.ENGLISH.value:
+        skill = st.sidebar.selectbox(
+            "Select a skill:",
+            [skill.value for skill in EnglishSkill]
+        )
+    elif topic is Topic.MATH.value:
+        skill = st.sidebar.selectbox(
+            "Select a skill:",
+            [skill.value for skill in MathSkill]
+        )
+    return skill
 
 
 def show_app_title_and_introduction():

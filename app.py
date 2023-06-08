@@ -2,6 +2,7 @@ import os
 
 import streamlit as st
 
+from level import Level
 from skill import EnglishSkill, MathSkill
 from topic import Topic
 
@@ -40,6 +41,8 @@ def homepage():
     topic = get_topic()
     # Get the selected Skill
     skill = get_skill(topic)
+    # Get the selected level
+    level = get_level()
 
 
 def get_topic():
@@ -62,6 +65,13 @@ def get_skill(topic):
             [skill.value for skill in MathSkill]
         )
     return skill
+
+
+def get_level():
+    level = st.sidebar.selectbox(
+        "Select a difficulty level:",
+        [level.value for level in Level])
+    return level
 
 
 def show_app_title_and_introduction():

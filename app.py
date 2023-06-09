@@ -1,6 +1,7 @@
 import os
 
 import streamlit as st
+from langchain.llms import AzureOpenAI
 
 from level import Level
 from skill import EnglishSkill, MathSkill
@@ -29,6 +30,17 @@ def set_env():
     os.environ["MYSQL_CONNECTION_STRING"] = st.secrets["MYSQL_CONNECTION_STRING"]
 
 
+def load_llm(temperature):
+    os.environ["OPENAI_API_TYPE"] = st.secrets["OPENAI_API_TYPE"]
+    os.environ["OPENAI_API_BASE"] = st.secrets["OPENAI_API_BASE"]
+    os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+    os.environ["DEPLOYMENT_NAME"] = st.secrets["DEPLOYMENT_NAME"]
+    os.environ["MODEL_NAME"] = st.secrets["MODEL_NAME"]
+    return AzureOpenAI(temperature=temperature,
+                       deployment_name=os.environ["DEPLOYMENT_NAME"],
+                       model_name=os.environ["MODEL_NAME"])
+
+
 def homepage():
     """
     The homepage function represents the main user interface of the Streamlit application.
@@ -43,6 +55,31 @@ def homepage():
     skill = get_skill(topic)
     # Get the selected level
     level = get_level()
+    # load the llm
+    llm = load_llm(0.9)
+    # Show the lesson
+    show_lesson(topic, skill, level, llm)
+    # show next button
+    show_next_challenge()
+
+
+def show_lesson(topic, skill, level, llm):
+    st.header(skill.value)
+    st.write(skill.description)
+    get_question(topic, skill, level, llm)
+
+
+def show_next_challenge():
+    return st.button(f"Next challenge")
+
+
+def get_question(topic, skill, level, llm):
+    response = llm(skill.prompt.format(level=level))
+    st.write(response)
+
+
+def get_answer():
+    meaning = st.text_input()
 
 
 def get_topic():
@@ -55,15 +92,15 @@ def get_topic():
 def get_skill(topic):
     skill = None
     if topic is Topic.ENGLISH.value:
-        skill = st.sidebar.selectbox(
+        skill = EnglishSkill.from_value(st.sidebar.selectbox(
             "Select a skill:",
             [skill.value for skill in EnglishSkill]
-        )
+        ))
     elif topic is Topic.MATH.value:
-        skill = st.sidebar.selectbox(
+        skill = MathSkill.from_value(st.sidebar.selectbox(
             "Select a skill:",
             [skill.value for skill in MathSkill]
-        )
+        ))
     return skill
 
 

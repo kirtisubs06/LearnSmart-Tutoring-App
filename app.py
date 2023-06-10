@@ -194,18 +194,23 @@ def show_question(label, question):
 
 
 def process_question(skill, question):
+    print(question)
     if not question:
         return
 
-    keyword = ""
+    keywords = []
     if skill is EnglishSkill.VOCABULARY:
-        keyword = "Word:"
+        keywords = ["Word:", "Word "]
+    elif skill is EnglishSkill.GRAMMAR:
+        keywords = ["Sentence:", "Sentence "]
+
     lines = question.splitlines()
 
     for line in lines:
-        if line.startswith(keyword):
-            word = line[len(keyword):].strip()
-            return keyword.strip(), word
+        for keyword in keywords:
+            if line.startswith(keyword):
+                word = line[len(keyword):].strip()
+                return keyword.strip(), word
 
     return None
 
@@ -218,19 +223,18 @@ def get_answer():
 def evaluate(skill, question, answer):
     if not answer:
         return
-    print(answer)
     response = llm(skill.answer_evaluation_prompt.format(question=question, answer=answer))
+    print(response)
     lines = response.splitlines()
     for line in lines:
-        if ":" not in line:
+        if len(line) <= 0:
             continue
 
         key, value = line.split(":", 1)
-        process(key, value)
+        process(skill, key, value)
 
 
-def process(key, value):
-    print(key, value)
+def process(skill, key, value):
     if key == "Score":
         score = float(value)
         if 0.0 <= score <= 0.5:
@@ -240,13 +244,20 @@ def process(key, value):
         else:
             st.success("Great job!")
 
-    if key == "Solution":
-        st.write("**Meaning:**")
-        st.write(value)
-
-    if key == "Usage":
-        st.write("**Usage:**")
-        st.write(value)
+    if skill is EnglishSkill.VOCABULARY:
+        if key == "Solution":
+            st.write("**Meaning:**")
+            st.write(value)
+        elif key == "Misc":
+            st.write("**Usage:**")
+            st.write(value)
+    elif skill is EnglishSkill.GRAMMAR:
+        if key == "Solution":
+            st.write("**Correct Answer:**")
+            st.write(value)
+        elif key == "Misc":
+            st.write("**Analysis:**")
+            st.write(value)
 
 
 if __name__ == "__main__":

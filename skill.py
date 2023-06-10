@@ -13,6 +13,11 @@ class EnglishSkill(Enum):
                   prompts.ENGLISH_VOCABULARY_QUESTION_GENERATION,
                   prompts.ENGLISH_VOCABULARY_ANSWER_EVALUATION
                   )
+    GRAMMAR = ("Grammar Guru",
+               "Enhancing grammatical knowledge and correcting sentence errors.",
+               prompts.ENGLISH_GRAMMAR_QUESTION_GENERATION,
+               prompts.ENGLISH_GRAMMAR_ANSWER_EVALUATION
+               )
 
     def __init__(self, value, description, question_generation_prompt, answer_evaluation_prompt):
         self._value_ = value

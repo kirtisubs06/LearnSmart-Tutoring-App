@@ -1,4 +1,3 @@
-import json
 import os
 
 import streamlit as st
@@ -34,6 +33,9 @@ def main():
 
 
 def set_env():
+    """
+    Set all the environment variables
+    """
     os.environ["OPENAI_API_TYPE"] = st.secrets["OPENAI_API_TYPE"]
     os.environ["OPENAI_API_BASE"] = st.secrets["OPENAI_API_BASE"]
     os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
@@ -78,6 +80,9 @@ def homepage():
 
 
 def show_app_title_and_introduction():
+    """
+    Show the app title and introduction
+    """
     st.title("Welcome to LearnSmart!")
     st.write(f"""
             LearnSmart is a tool to enhance your English and Math skills!
@@ -101,10 +106,17 @@ def show_app_title_and_introduction():
 
 
 def show_sidebar():
+    """
+    Show the sidebar
+    """
     st.sidebar.title("LearnSmart")
 
 
 def get_topic():
+    """
+    Get the topic
+    :return: topic
+    """
     topic = st.sidebar.selectbox(
         "Select a topic:",
         [topic.value for topic in Topic])
@@ -112,6 +124,11 @@ def get_topic():
 
 
 def get_skill(topic):
+    """
+    Get the skill
+    :param topic:
+    :return: skill
+    """
     skill = None
     if topic is Topic.ENGLISH.value:
         skill = EnglishSkill.from_value(st.sidebar.selectbox(
@@ -127,6 +144,10 @@ def get_skill(topic):
 
 
 def get_level():
+    """
+    Get the level
+    :return: level
+    """
     level = st.sidebar.selectbox(
         "Select a difficulty level:",
         [level.value for level in Level])
@@ -134,11 +155,19 @@ def get_level():
 
 
 def initialize_session(topic, skill, level):
+    """
+    Set the topic, skill and level in the session
+    :param topic:
+    :param skill:
+    :param level:
+    :return: (session_start indicator, topic change indicator, skill change indicator, level change indicator)
+    """
     session_start = False
     topic_changed = False
     skill_changed = False
     level_changed = False
 
+    # Topic
     if "topic" not in st.session_state:
         session_start = True
         st.session_state["topic"] = topic
@@ -146,6 +175,7 @@ def initialize_session(topic, skill, level):
         topic_changed = True
         st.session_state["topic"] = topic
 
+    # Skill
     if "skill" not in st.session_state:
         session_start = True
         st.session_state["skill"] = skill
@@ -153,6 +183,7 @@ def initialize_session(topic, skill, level):
         skill_changed = True
         st.session_state["skill"] = skill
 
+    # Level
     if "level" not in st.session_state:
         session_start = True
         st.session_state["level"] = level
@@ -166,19 +197,41 @@ def initialize_session(topic, skill, level):
 
 
 def show_lesson(topic, skill, level):
+    """
+    Show the lesson
+    :param topic:
+    :param skill:
+    :param level:
+    :return:
+    """
     st.header(skill.value)
     st.markdown(f"_{skill.description}_")
 
 
 def show_next_challenge():
+    """
+    Display the "Next Challenge" button
+    :return:
+    """
     return st.button(f"Next challenge", on_click=clear_answer, type="primary")
 
 
 def clear_answer():
+    """
+    Clear the answer
+    :return:
+    """
     st.session_state["answer"] = ""
 
 
 def get_question(topic, skill, level):
+    """
+    Invoke the LLM and generate the question
+    :param topic:
+    :param skill:
+    :param level:
+    :return: label, question
+    """
     # Get the generated question from LLM
     response = llm(skill.question_generation_prompt.format(level=level))
     # Parse the response and get the label and the text
@@ -188,39 +241,61 @@ def get_question(topic, skill, level):
 
 
 def show_question(label, question):
+    """
+    Display the label and the question
+    :param label:
+    :param question:
+    :return:
+    """
     # Display
     st.write(f"**{label}**")
     st.write(question)
 
 
 def process_question(skill, question):
+    """
+    Process the LLM response and extract the question label and question
+    :param skill:
+    :param question:
+    :return: question label, question
+    """
     print(question)
     if not question:
-        return
+        return None, None
 
-    keywords = []
+    keyword = ""
     if skill is EnglishSkill.VOCABULARY:
-        keywords = ["Word:", "Word "]
+        keyword = "Word:"
     elif skill is EnglishSkill.GRAMMAR:
-        keywords = ["Sentence:", "Sentence "]
+        keyword = "Sentence:"
 
     lines = question.splitlines()
 
     for line in lines:
-        for keyword in keywords:
-            if line.startswith(keyword):
-                word = line[len(keyword):].strip()
-                return keyword.strip(), word
+        if line.startswith(keyword):
+            word = line[len(keyword):].strip()
+            return keyword.strip(), word
 
-    return None
+    return None, None
 
 
 def get_answer():
+    """
+    Capture the user response
+    :return: user response
+    """
     answer = st.text_input(label="Answer", key="answer")
     return answer
 
 
 def evaluate(skill, question, answer):
+    """
+    Invoke the LLM to evaluate the user response
+    :param skill:
+    :param question:
+    :param answer:
+    :return:
+    """
     if not answer:
         return
     response = llm(skill.answer_evaluation_prompt.format(question=question, answer=answer))
@@ -235,6 +310,14 @@ def evaluate(skill, question, answer):
 
 
 def process(skill, key, value):
+    """
+    Process the LLM response for answer evaluation. For different skills,
+    different labels and questions appear.
+    :param skill:
+    :param key:
+    :param value:
+    :return:
+    """
     if key == "Score":
         score = float(value)
         if 0.0 <= score <= 0.5:

@@ -1,29 +1,24 @@
 from enum import Enum
 
+import prompts
+
 
 class EnglishSkill(Enum):
     """
     An enumeration representing different english skills
     """
 
-    VOCABULARY = ("Vocabulary",
+    VOCABULARY = ("Word Wizard",
                   "Expanding vocabulary and understanding word meanings.",
-                  "As an exceptional language coach, your expertise lies in helping users expand their vocabulary "
-                  "effectively. "
-                  "Please generate a word at the {level} level of difficulty in English. "
-
-                  "Remember:"
-                  "- Easy Level: Choose a word that is simple and commonly used."
-                  "- Intermediate Level: Select a word that is more advanced or less commonly used."
-                  "- Advanced Level: Find a word that is challenging and may require higher language proficiency."
-
-                  "Your response should be preceded by the text 'Word:'"
+                  prompts.ENGLISH_VOCABULARY_QUESTION_GENERATION,
+                  prompts.ENGLISH_VOCABULARY_ANSWER_EVALUATION
                   )
 
-    def __init__(self, value, description, prompt):
+    def __init__(self, value, description, question_generation_prompt, answer_evaluation_prompt):
         self._value_ = value
         self.description = description
-        self.prompt = prompt
+        self.question_generation_prompt = question_generation_prompt
+        self.answer_evaluation_prompt = answer_evaluation_prompt
 
     @staticmethod
     def from_value(value):
@@ -37,11 +32,17 @@ class MathSkill(Enum):
     An enumeration representing different math skills
     """
 
-    ARITHMETIC = ("Arithmetic", "Sharpen your mental math skills with a series of quick-fire arithmetic challenges.")
+    ARITHMETIC = ("Arithmetic",
+                  "Sharpen your mental math skills with a series of quick-fire arithmetic challenges.",
+                  prompts.ENGLISH_VOCABULARY_QUESTION_GENERATION,
+                  prompts.ENGLISH_VOCABULARY_ANSWER_EVALUATION
+                  )
 
-    def __init__(self, value, description):
+    def __init__(self, value, description, question_generation_prompt, answer_evaluation_prompt):
         self._value_ = value
         self.description = description
+        self.question_generation_prompt = question_generation_prompt
+        self.answer_evaluation_prompt = answer_evaluation_prompt
 
     @staticmethod
     def from_value(value):

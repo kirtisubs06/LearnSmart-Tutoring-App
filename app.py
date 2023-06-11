@@ -263,17 +263,16 @@ def process_question(skill, question):
     if not question:
         return None, None
 
-    keyword = skill.labels["Keyword"] + ":"
     lines = question.splitlines()
 
+    label = ""
     text = ""
     for line in lines:
-        if keyword in line:
+        if ":" in line and label == "":
             label, text = line.split(":", 1)
         else:
             text += "\n" + line
-
-    return keyword.strip(), text
+    return label.strip(), text.strip()
 
 
 def get_answer():
@@ -306,7 +305,7 @@ def evaluate(skill, question, answer):
 
         if ':' in line:
             if key is not None:
-                process(skill, key, value.strip())
+                process(skill, key.strip(), value.strip())
             key, value = line.split(":", 1)
         else:
             value += "\n" + line
@@ -333,7 +332,7 @@ def process(skill, key, value):
         else:
             st.success("Great job!")
     else:
-        st.write(f"**{skill.labels[key]}:**")
+        st.write(f"**{key}:**")
         st.write(value)
 
 

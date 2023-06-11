@@ -8,16 +8,16 @@ ENGLISH_VOCABULARY_QUESTION_GENERATION_PROMPT = """
     - Advanced Level: Find a word that is challenging and may require higher language proficiency.
 
     Your response should be preceded by the text "Word:"
-"""
+    """
 
 ENGLISH_VOCABULARY_ANSWER_EVALUATION_PROMPT = """
     Word: {question}, Meaning: {answer}
     Please carefully evaluate the meaning provided for the word and provide the response in the following format:
 
     Score: [Should be a float value between 0 and 1, representing your assessment of the accuracy of the answer provided]
-    Solution: [Provide the correct meaning of the word]
-    Misc: [Should be an example sentence using the word]
-"""
+    Meaning: [Provide the correct meaning of the word]
+    Usage: [Should be an example sentence using the word]
+    """
 
 ENGLISH_GRAMMAR_QUESTION_GENERATION_PROMPT = """
     As an exceptional language coach, your expertise lies in helping users master grammar. 
@@ -45,8 +45,8 @@ ENGLISH_GRAMMAR_ANSWER_EVALUATION_PROMPT = """
 
     Score: Should be a value between 0 and 1, representing your assessment of the accuracy of the 
             answer provided. Spelling mistakes should result in something less than 0.5.
-    Solution: Re-write the sentence without grammatical errors.   
-    Misc: Provide an analysis of the provided answer
+    Correct answer: Re-write the sentence without grammatical errors.   
+    Analysis: Provide an analysis of the provided answer
 
     Your evaluation should be based on the following conditions: 
     1. The provided answer should convey the same meaning as the correct answer you come up with. 
@@ -93,8 +93,8 @@ ENGLISH_READING_ANSWER_EVALUATION_PROMPT = """
             For two correct answers, return 0.66
             For three correct answers, return 1.0
             Give partial credit to answers that are partially correct]
-    Solution: [Please provide the correct answers to the questions based on your own understanding. Just provide the index number of the questions for each one of the answers.]
-    Misc: [Please provide the analysis of the supplied answer.]   
+    Correct answers: [Please provide the correct answers to the questions based on your own understanding. Just provide the index number of the questions for each one of the answers.]
+    Analysis: [Please provide the analysis of the supplied answer.]   
     """
 
 ENGLISH_WRITING_QUESTION_GENERATION_PROMPT = """
@@ -109,11 +109,6 @@ ENGLISH_WRITING_QUESTION_GENERATION_PROMPT = """
     - Intermediate: Craft a writing assignment with a word limit of 75 words.
     - Advanced: Develop a writing assignment with a word limit of 100 words.
 
-    Examples:
-    - Easy: Write a descriptive paragraph about your favorite hobby (50 word limit).
-    - Intermediate: Write an argumentative essay discussing the pros and cons of social media (75 word limit).
-    - Advanced: Write a research paper analyzing the causes and consequences of climate change (100 words limit).
-    
     The writing prompt should be preceded by text "Prompt:"
     """
 
@@ -129,8 +124,8 @@ ENGLISH_WRITING_ANSWER_EVALUATION_PROMPT = """
     Your task is to carefully evaluate the provided answer and provide the following information:
     
     Score: [Should be a value between 0 and 1, representing your evaluation of the answer]
-    Solution: [Please provide a sample response for the prompt]
-    Misc: [Your analysis should be detailed and include specific suggestions for improvement] 
+    Example: [Please provide a sample response for the prompt]
+    Analysis: [Your analysis should be detailed and include specific suggestions for improvement] 
 
     When evaluating the answer, consider the following criteria:
     1. The answer should effectively address the writing assignment prompt.

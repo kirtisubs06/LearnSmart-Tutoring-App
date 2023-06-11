@@ -8,7 +8,7 @@ class EnglishSkill(Enum):
     An enumeration representing different english skills
     """
 
-    VOCABULARY = ("Word Wizard",
+    VOCABULARY = ("Vocabulary",
                   "Expanding vocabulary and understanding word meanings.",
                   prompts.ENGLISH_VOCABULARY_QUESTION_GENERATION_PROMPT,
                   prompts.ENGLISH_VOCABULARY_ANSWER_EVALUATION_PROMPT,
@@ -17,7 +17,7 @@ class EnglishSkill(Enum):
                       "Solution": "Meaning",
                       "Misc": "Usage",
                   })
-    GRAMMAR = ("Grammar Guru",
+    GRAMMAR = ("Grammar",
                "Enhancing grammatical knowledge and correcting sentence errors.",
                prompts.ENGLISH_GRAMMAR_QUESTION_GENERATION_PROMPT,
                prompts.ENGLISH_GRAMMAR_ANSWER_EVALUATION_PROMPT,
@@ -33,6 +33,15 @@ class EnglishSkill(Enum):
                {
                    "Keyword": "Passage",
                    "Solution": "Correct answer",
+                   "Misc": "Analysis",
+               })
+    WRITING = ("Writing",
+               "Developing writing abilities by creating coherent and expressive paragraphs.",
+               prompts.ENGLISH_WRITING_QUESTION_GENERATION_PROMPT,
+               prompts.ENGLISH_WRITING_ANSWER_EVALUATION_PROMPT,
+               {
+                   "Keyword": "Prompt",
+                   "Solution": "Example",
                    "Misc": "Analysis",
                })
 

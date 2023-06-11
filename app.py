@@ -268,8 +268,8 @@ def process_question(skill, question):
 
     text = ""
     for line in lines:
-        if line.startswith(keyword):
-            text = line[len(keyword):].strip()
+        if keyword in line:
+            label, text = line.split(":", 1)
         else:
             text += "\n" + line
 

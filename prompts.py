@@ -51,7 +51,7 @@ ENGLISH_GRAMMAR_ANSWER_EVALUATION_PROMPT = """
     Your evaluation should be based on the following conditions: 
     1. The provided answer should convey the same meaning as the correct answer you come up with. 
     2. The provided answer should not contain, grammatical errors, spelling mistakes or typos. 
-"""
+    """
 
 ENGLISH_READING_QUESTION_GENERATION_PROMPT = """
     As an exceptional language coach, your expertise lies in helping users develop their reading 
@@ -97,10 +97,54 @@ ENGLISH_READING_ANSWER_EVALUATION_PROMPT = """
     Misc: [Please provide the analysis of the supplied answer.]   
     """
 
+ENGLISH_WRITING_QUESTION_GENERATION_PROMPT = """
+    As a language coach, your expertise lies in helping users effectively learn a new language. 
+    Today, you will provide writing assignments with different levels of difficulty in English.
+
+    Please provide a writing assignment at the {level} level. The assignments should challenge 
+    the learners without being too easy or too difficult.
+
+    Levels:
+    - Easy: Create a short writing assignment with a word limit of 50 words.
+    - Intermediate: Craft a writing assignment with a word limit of 75 words.
+    - Advanced: Develop a writing assignment with a word limit of 100 words.
+
+    Examples:
+    - Easy: Write a descriptive paragraph about your favorite hobby (50 word limit).
+    - Intermediate: Write an argumentative essay discussing the pros and cons of social media (75 word limit).
+    - Advanced: Write a research paper analyzing the causes and consequences of climate change (100 words limit).
+    
+    The writing prompt should be preceded by text "Prompt:"
+    """
+
+ENGLISH_WRITING_ANSWER_EVALUATION_PROMPT = """
+    As a dedicated language coach, your expertise lies in assisting users in effectively learning a 
+    new language. Developing strong writing skills is a crucial aspect of language acquisition. Today, 
+    you have the opportunity to evaluate an answer provided for a writing assignment prompt in English.
+    Additionally, please provide a sample response for the prompt. 
+
+    Writing Assignment Prompt: {question}
+    Answer to Evaluate: {answer}
+
+    Your task is to carefully evaluate the provided answer and provide the following information:
+    
+    Score: [Should be a value between 0 and 1, representing your evaluation of the answer]
+    Solution: [Please provide a sample response for the prompt]
+    Misc: [Your analysis should be detailed and include specific suggestions for improvement] 
+
+    When evaluating the answer, consider the following criteria:
+    1. The answer should effectively address the writing assignment prompt.
+    2. The answer should demonstrate strong writing skills, including proper grammar, organization, and coherence.
+
+    Please ensure that your evaluation is constructive, avoiding harsh criticism or de-motivation. It should aim 
+    to help the writer enhance their writing skills. Address the user as "You" to establish a supportive and 
+    personalized tone. 
+    """
+
 MATH_QUESTION_GENERATION_PROMPT = """
     Generate a word in lowercase at the {level} level of difficulty in English. 
     Your response should be preceded by the text 'Word:'"
-"""
+    """
 
 MATH_ANSWER_EVALUATION_PROMPT = """
     Question: {question}, Answer: {answer}
@@ -109,6 +153,6 @@ MATH_ANSWER_EVALUATION_PROMPT = """
     Score: [Should be a value between 0 and 1, representing your assessment of the accuracy of the answer provided]
     Solution: [Provide the correct meaning of the word.]
     Usage: [Should be an example sentence using the word]
-"""
+    """
 
 

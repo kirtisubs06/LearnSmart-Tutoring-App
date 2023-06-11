@@ -74,7 +74,7 @@ def homepage():
     # Show question
     show_question(label, question)
     # Get answer
-    answer = get_answer()
+    answer = get_answer(skill)
     # Evaluate the answer
     evaluate(skill, question, answer)
 
@@ -275,12 +275,16 @@ def process_question(skill, question):
     return label.strip(), text.strip()
 
 
-def get_answer():
+def get_answer(skill):
     """
     Capture the user response
     :return: user response
     """
-    answer = st.text_input(label="Answer", key="answer")
+    if skill is EnglishSkill.WRITING or skill is EnglishSkill.READING:
+        answer = st.text_area(label="Answer", key="answer")
+    else:
+        answer = st.text_input(label="Answer", key="answer")
+
     return answer
 
 

@@ -1,6 +1,13 @@
 ENGLISH_VOCABULARY_QUESTION_GENERATION_PROMPT = """
-    As a world class vocabulary coach, please generate a word in lowercase at the {level} level of difficulty in English. 
-    Your response should be preceded by the text 'Word:'"
+    As an exceptional language coach, your expertise lies in helping users expand their vocabulary effectively.
+    Please generate a word at the {level} level of difficulty in English. 
+
+    Remember:
+    - Easy Level: Choose a word that is simple and commonly used.
+    - Intermediate Level: Select a word that is more advanced or less commonly used.
+    - Advanced Level: Find a word that is challenging and may require higher language proficiency.
+
+    Your response should be preceded by the text "Word:"
 """
 
 ENGLISH_VOCABULARY_ANSWER_EVALUATION_PROMPT = """
@@ -8,9 +15,7 @@ ENGLISH_VOCABULARY_ANSWER_EVALUATION_PROMPT = """
     Please carefully evaluate the meaning provided for the word and provide the response in the following format:
 
     Score: [Should be a float value between 0 and 1, representing your assessment of the accuracy of the answer provided]
-    [insert newline here]
     Solution: [Provide the correct meaning of the word]
-    [insert newline here]
     Misc: [Should be an example sentence using the word]
 """
 
@@ -82,9 +87,14 @@ ENGLISH_READING_ANSWER_EVALUATION_PROMPT = """
 
     Please carefully evaluate the answers provided and provide the following information:
 
-    Score: [Should be a value between 0 and 1, representing your evaluation of the answers.]
+    Score: [Should be a value between 0 and 1, representing your evaluation of the answers.
+            For zero correct answers, return 0 
+            For a single correct answer, return 0.33
+            For two correct answers, return 0.66
+            For three correct answers, return 1.0
+            Give partial credit to answers that are partially correct]
     Solution: [Please provide the correct answers to the questions based on your own understanding. Just provide the index number of the questions for each one of the answers.]
-    Misc: [Your analysis should be detailed and include specific suggestions for improvement]   
+    Misc: [Please provide the analysis of the supplied answer.]   
     """
 
 MATH_QUESTION_GENERATION_PROMPT = """
@@ -93,10 +103,10 @@ MATH_QUESTION_GENERATION_PROMPT = """
 """
 
 MATH_ANSWER_EVALUATION_PROMPT = """
-    Word: {question}, Meaning: {answer}
+    Question: {question}, Answer: {answer}
     Please carefully evaluate the meaning provided for the word and provide the following information:
 
-    Confidence Score: [Should be a value between 0 and 1, representing your assessment of the accuracy of the answer provided]
+    Score: [Should be a value between 0 and 1, representing your assessment of the accuracy of the answer provided]
     Solution: [Provide the correct meaning of the word.]
     Usage: [Should be an example sentence using the word]
 """

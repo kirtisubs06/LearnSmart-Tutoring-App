@@ -263,14 +263,7 @@ def process_question(skill, question):
     if not question:
         return None, None
 
-    keyword = ""
-    if skill is EnglishSkill.VOCABULARY:
-        keyword = "Word:"
-    elif skill is EnglishSkill.GRAMMAR:
-        keyword = "Sentence:"
-    elif skill is EnglishSkill.READING:
-        keyword = "Passage:"
-
+    keyword = skill.labels["Keyword"] + ":"
     lines = question.splitlines()
 
     text = ""
@@ -339,28 +332,9 @@ def process(skill, key, value):
             st.warning("Good job! Almost there.")
         else:
             st.success("Great job!")
-
-    if skill is EnglishSkill.VOCABULARY:
-        if key == "Solution":
-            st.write("**Meaning:**")
-            st.write(value)
-        elif key == "Misc":
-            st.write("**Usage:**")
-            st.write(value)
-    elif skill is EnglishSkill.GRAMMAR:
-        if key == "Solution":
-            st.write("**Correct Answer:**")
-            st.write(value)
-        elif key == "Misc":
-            st.write("**Analysis:**")
-            st.write(value)
-    elif skill is EnglishSkill.READING:
-        if key == "Solution":
-            st.write("**Correct Answer:**")
-            st.write(value)
-        elif key == "Misc":
-            st.write("**Analysis:**")
-            st.write(value)
+    else:
+        st.write(f"**{skill.labels[key]}:**")
+        st.write(value)
 
 
 if __name__ == "__main__":

@@ -40,16 +40,18 @@ ENGLISH_GRAMMAR_QUESTION_GENERATION_PROMPT = """
     """
 
 ENGLISH_GRAMMAR_ANSWER_EVALUATION_PROMPT = """
-    Sentence: {question}
-    Provided Answer: {answer}
+    As an exceptional language coach, your expertise lies in helping users master grammar.
+    Today, you will evaluate an answer provided for a grammatically incorrect sentence in English.
 
-    Please carefully evaluate the answer provided and provide the response in the following format:
+    Sentence: {question}
+    Answer: {answer}
+
+    Please carefully evaluate the answer provided and provide the following information:
 
     Score: [Should be a value between 0 and 1, representing your assessment of the accuracy of the 
             answer provided. Spelling mistakes should result in something less than 0.5.]
-    Correct answer: [Re-write the sentence without grammatical errors.]   
-    Analysis: [Provide a detailed analysis of the grammatical errors contained in the original sentence.
-               Start the evaluation with "The sentence"]
+    Solution: [Re-write the sentence without grammatical errors.]   
+    Analysis: [Provide an analysis of the answer]
 
     Your evaluation should be based on the following conditions: 
     1. The provided answer should convey the same meaning as the correct answer you come up with. 
@@ -115,13 +117,18 @@ ENGLISH_WRITING_QUESTION_GENERATION_PROMPT = """
     """
 
 ENGLISH_WRITING_ANSWER_EVALUATION_PROMPT = """
-    Prompt: {question}
-    Answer: {answer}
+    As a dedicated language coach, your expertise lies in assisting users in effectively learning a 
+    new language. Developing strong writing skills is a crucial aspect of language acquisition. Today, 
+    you have the opportunity to evaluate an answer provided for a writing assignment prompt in English.
+    Additionally, please provide a sample response for the prompt. 
+
+    Writing Assignment Prompt: {question}
+    Answer to Evaluate: {answer}
 
     Your task is to carefully evaluate the provided answer and provide the following information:
     
     Score: [Should be a value between 0 and 1, representing your evaluation of the answer]
-    Example: [Please provide a sample response for the prompt]
+    Solution: [Please provide a sample response for the prompt]
     Analysis: [Your analysis should be detailed and include specific suggestions for improvement] 
 
     When evaluating the answer, consider the following criteria:

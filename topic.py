@@ -8,3 +8,9 @@ class Topic(Enum):
 
     ENGLISH = "English"
     MATH = "Math"
+
+    @staticmethod
+    def from_value(value):
+        for topic in Topic:
+            if topic.value == value:
+                return topic

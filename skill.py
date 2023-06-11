@@ -45,8 +45,8 @@ class MathSkill(Enum):
 
     ARITHMETIC = ("Arithmetic",
                   "Sharpen your mental math skills with a series of quick-fire arithmetic challenges.",
-                  prompts.ENGLISH_VOCABULARY_QUESTION_GENERATION_PROMPT,
-                  prompts.ENGLISH_VOCABULARY_ANSWER_EVALUATION_PROMPT)
+                  prompts.MATH_QUESTION_GENERATION_PROMPT,
+                  prompts.MATH_ANSWER_EVALUATION_PROMPT)
 
     def __init__(self, value, description, question_generation_prompt, answer_evaluation_prompt):
         self._value_ = value

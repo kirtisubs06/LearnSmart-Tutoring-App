@@ -11,11 +11,16 @@ ENGLISH_VOCABULARY_QUESTION_GENERATION_PROMPT = """
     """
 
 ENGLISH_VOCABULARY_ANSWER_EVALUATION_PROMPT = """
-    Word: {question}, Meaning: {answer}
-    Please carefully evaluate the meaning provided for the word and provide the response in the following format:
+    As an exceptional language coach, your expertise lies in helping users expand their vocabulary effectively.
+    A crucial aspect of language learning is building a strong vocabulary. 
 
-    Score: [Should be a float value between 0 and 1, representing your assessment of the accuracy of the answer provided]
-    Meaning: [Provide the correct meaning of the word]
+    Word to evaluate: {question}
+    Meaning to evaluate: {answer}
+
+    Please carefully evaluate the meaning provided and provide the following information:
+
+    Score: [Should be a value between 0 and 1, representing your assessment of the accuracy of the answer provided]
+    Solution: [Provide the correct meaning of the word.]
     Usage: [Should be an example sentence using the word]
     """
 
@@ -35,18 +40,16 @@ ENGLISH_GRAMMAR_QUESTION_GENERATION_PROMPT = """
     """
 
 ENGLISH_GRAMMAR_ANSWER_EVALUATION_PROMPT = """
-    As an exceptional language coach, your expertise lies in helping users master grammar.
-    Today, you will evaluate an answer provided for a grammatically incorrect sentence in English.
-
     Sentence: {question}
-    Answer: {answer}
+    Provided Answer: {answer}
 
     Please carefully evaluate the answer provided and provide the response in the following format:
 
-    Score: Should be a value between 0 and 1, representing your assessment of the accuracy of the 
-            answer provided. Spelling mistakes should result in something less than 0.5.
-    Correct answer: Re-write the sentence without grammatical errors.   
-    Analysis: Provide an analysis of the provided answer
+    Score: [Should be a value between 0 and 1, representing your assessment of the accuracy of the 
+            answer provided. Spelling mistakes should result in something less than 0.5.]
+    Correct answer: [Re-write the sentence without grammatical errors.]   
+    Analysis: [Provide a detailed analysis of the grammatical errors contained in the original sentence.
+               Start the evaluation with "The sentence"]
 
     Your evaluation should be based on the following conditions: 
     1. The provided answer should convey the same meaning as the correct answer you come up with. 
@@ -94,11 +97,10 @@ ENGLISH_READING_ANSWER_EVALUATION_PROMPT = """
             For three correct answers, return 1.0
             Give partial credit to answers that are partially correct]
     Correct answers: [Please provide the correct answers to the questions based on your own understanding. Just provide the index number of the questions for each one of the answers.]
-    Analysis: [Please provide the analysis of the supplied answer.]   
     """
 
 ENGLISH_WRITING_QUESTION_GENERATION_PROMPT = """
-    As a language coach, your expertise lies in helping users effectively learn a new language. 
+    As an exceptional language coach, your expertise lies in helping users effectively learn a new language. 
     Today, you will provide writing assignments with different levels of difficulty in English.
 
     Please provide a writing assignment at the {level} level. The assignments should challenge 
@@ -113,13 +115,8 @@ ENGLISH_WRITING_QUESTION_GENERATION_PROMPT = """
     """
 
 ENGLISH_WRITING_ANSWER_EVALUATION_PROMPT = """
-    As a dedicated language coach, your expertise lies in assisting users in effectively learning a 
-    new language. Developing strong writing skills is a crucial aspect of language acquisition. Today, 
-    you have the opportunity to evaluate an answer provided for a writing assignment prompt in English.
-    Additionally, please provide a sample response for the prompt. 
-
-    Writing Assignment Prompt: {question}
-    Answer to Evaluate: {answer}
+    Prompt: {question}
+    Answer: {answer}
 
     Your task is to carefully evaluate the provided answer and provide the following information:
     
@@ -137,17 +134,31 @@ ENGLISH_WRITING_ANSWER_EVALUATION_PROMPT = """
     """
 
 MATH_QUESTION_GENERATION_PROMPT = """
-    Generate a word in lowercase at the {level} level of difficulty in English. 
-    Your response should be preceded by the text 'Word:'"
+    As an exceptional math coach, your expertise lies in helping users effectively master arithmetic. 
+    Today, you will provide arithmetic questions with different levels of difficulty in Math.
+    
+    Generate an arithmetic problem (Addition, Subtraction, Multiplication, Division or a combination of these
+    operations at {level} level of difficulty. No word problems.
+     
+    Your response should be preceded by the text 'Problem:'"
     """
 
 MATH_ANSWER_EVALUATION_PROMPT = """
-    Question: {question}, Answer: {answer}
-    Please carefully evaluate the meaning provided for the word and provide the following information:
-
-    Score: [Should be a value between 0 and 1, representing your assessment of the accuracy of the answer provided]
-    Solution: [Provide the correct meaning of the word.]
-    Usage: [Should be an example sentence using the word]
+    Problem: {question} 
+    Provided Answer: {answer}
+    
+    First, solve the problem and compute the correct answer. 
+    To solve the problem,
+    Write a mathematical equation and generate the answer.
+    Write a python function that returns the answer. 
+    Compare the two answers and if they are same, then finalize the correct answer.
+    
+    Next, compare the user-provided answer with the correct answer you came up with and 
+    carefully evaluate the score. Please provide your response in the following format:
+    Score: [0 if the user provided answer does not match the correct answer, 1 otherwise]
+    Solution: [Provide the correct answer to the problem.]
+    Explanation: [Explain]   
     """
+
 
 

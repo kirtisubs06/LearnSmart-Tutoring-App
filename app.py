@@ -2,6 +2,7 @@ import os
 
 import streamlit as st
 from langchain.llms import AzureOpenAI
+from langchain import LLMMathChain
 
 from level import Level
 from skill import EnglishSkill, MathSkill
@@ -72,11 +73,15 @@ def homepage():
         clear_answer()
         label, question = get_question(topic, skill, level)
     # Show question
+    print(question)
     show_question(label, question)
     # Get answer
     answer = get_answer(skill)
+    print(answer)
+    # Submit button
+    show_submit()
     # Evaluate the answer
-    evaluate(skill, question, answer)
+    evaluate(topic, skill, question, answer)
 
 
 def show_app_title_and_introduction():
@@ -117,9 +122,9 @@ def get_topic():
     Get the topic
     :return: topic
     """
-    topic = st.sidebar.selectbox(
+    topic = Topic.from_value(st.sidebar.selectbox(
         "Select a topic:",
-        [topic.value for topic in Topic])
+        [topic.value for topic in Topic]))
     return topic
 
 
@@ -130,12 +135,12 @@ def get_skill(topic):
     :return: skill
     """
     skill = None
-    if topic is Topic.ENGLISH.value:
+    if topic is Topic.ENGLISH:
         skill = EnglishSkill.from_value(st.sidebar.selectbox(
             "Select a skill:",
             [skill.value for skill in EnglishSkill]
         ))
-    elif topic is Topic.MATH.value:
+    elif topic is Topic.MATH:
         skill = MathSkill.from_value(st.sidebar.selectbox(
             "Select a skill:",
             [skill.value for skill in MathSkill]
@@ -148,9 +153,9 @@ def get_level():
     Get the level
     :return: level
     """
-    level = st.sidebar.selectbox(
+    level = Level.from_value(st.sidebar.selectbox(
         "Select a difficulty level:",
-        [level.value for level in Level])
+        [level.value for level in Level]))
     return level
 
 
@@ -259,7 +264,6 @@ def process_question(skill, question):
     :param question:
     :return: question label, question
     """
-    print(question)
     if not question:
         return None, None
 
@@ -282,40 +286,59 @@ def get_answer(skill):
     """
     if skill is EnglishSkill.WRITING or skill is EnglishSkill.READING:
         answer = st.text_area(label="Answer", key="answer")
+    elif skill is MathSkill.ARITHMETIC:
+        answer = st.number_input(label="Answer", key="numeric_answer", step=None, format="%f")
     else:
         answer = st.text_input(label="Answer", key="answer")
 
     return answer
 
 
-def evaluate(skill, question, answer):
+def show_submit():
     """
-    Invoke the LLM to evaluate the user response
-    :param skill:
-    :param question:
-    :param answer:
+    Display the "Submit" button
     :return:
     """
+    return st.button(f"Submit", type="primary")
+
+
+def evaluate(topic, skill, question, answer):
     if not answer:
         return
-    response = llm(skill.answer_evaluation_prompt.format(question=question, answer=answer))
-    print(response)
-    lines = response.splitlines()
-    key = None
-    value = ""
-    for line in lines:
-        if len(line) <= 0:
-            continue
+    if topic is Topic.MATH:
+        evaluate_math(skill, question, answer)
+    elif topic is Topic.ENGLISH:
+        evaluate_english(skill, question, answer)
 
+
+def evaluate_math(skill, question, answer):
+    llm_math = LLMMathChain.from_llm(llm, verbose=True)
+    response = llm_math.run(question)
+    key, value = response.split(":", 1)
+    answer, value = round(float(answer), 2), round(float(value), 2)
+    score = 1.0 if answer == value else 0.0
+    response = f"Score: {score}\nCorrect answer: {value}"
+    process_response(skill, response)
+
+
+def evaluate_english(skill, question, answer):
+    response = llm(skill.answer_evaluation_prompt.format(question=question, answer=answer))
+    process_response(skill, response)
+
+
+def process_response(skill, response):
+    key = ""
+    value = ""
+    for line in response.splitlines():
         if ':' in line:
-            if key is not None:
+            if value:
                 process(skill, key.strip(), value.strip())
             key, value = line.split(":", 1)
         else:
-            value += "\n" + line
+            value += line
 
-    if key is not None:
-        process(skill, key, value.strip())
+    if value:
+        process(skill, key.strip(), value.strip())
 
 
 def process(skill, key, value):
@@ -329,6 +352,7 @@ def process(skill, key, value):
     """
     if key == "Score":
         score = float(value)
+        print("Score:", score)
         if 0.0 <= score <= 0.5:
             st.error("Keep trying. You can do better!")
         elif 0.5 < score <= 0.8:

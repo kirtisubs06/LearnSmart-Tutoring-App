@@ -99,6 +99,7 @@ ENGLISH_READING_ANSWER_EVALUATION_PROMPT = """
             For three correct answers, return 1.0
             Give partial credit to answers that are partially correct]
     Correct answers: [Please provide the correct answers to the questions based on your own understanding. Just provide the index number of the questions for each one of the answers.]
+    Analysis: [Your analysis should be detailed and include specific suggestions for improvement]
     """
 
 ENGLISH_WRITING_QUESTION_GENERATION_PROMPT = """
@@ -128,7 +129,7 @@ ENGLISH_WRITING_ANSWER_EVALUATION_PROMPT = """
     Your task is to carefully evaluate the provided answer and provide the following information:
     
     Score: [Should be a value between 0 and 1, representing your evaluation of the answer]
-    Solution: [Please provide a sample response for the prompt]
+    Example: [Please provide a sample response for the prompt]
     Analysis: [Your analysis should be detailed and include specific suggestions for improvement] 
 
     When evaluating the answer, consider the following criteria:

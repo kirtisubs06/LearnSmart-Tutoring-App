@@ -3,6 +3,7 @@ import os
 import streamlit as st
 from langchain.llms import AzureOpenAI
 from langchain import LLMMathChain
+from streamlit.runtime.state import NoValue
 
 from level import Level
 from skill import EnglishSkill, MathSkill
@@ -227,6 +228,7 @@ def clear_answer():
     :return:
     """
     st.session_state["answer"] = ""
+    st.session_state["numeric_answer"] = 0.0
 
 
 def get_question(topic, skill, level):
@@ -287,7 +289,7 @@ def get_answer(skill):
     if skill is EnglishSkill.WRITING or skill is EnglishSkill.READING:
         answer = st.text_area(label="Answer", key="answer")
     elif skill is MathSkill.ARITHMETIC:
-        answer = st.number_input(label="Answer", key="numeric_answer", step=None, format="%f")
+        answer = st.number_input(label="Answer", key="numeric_answer", step=None, value=NoValue())
     else:
         answer = st.text_input(label="Answer", key="answer")
 

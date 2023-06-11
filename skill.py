@@ -10,13 +10,18 @@ class EnglishSkill(Enum):
 
     VOCABULARY = ("Word Wizard",
                   "Expanding vocabulary and understanding word meanings.",
-                  prompts.ENGLISH_VOCABULARY_QUESTION_GENERATION,
-                  prompts.ENGLISH_VOCABULARY_ANSWER_EVALUATION
+                  prompts.ENGLISH_VOCABULARY_QUESTION_GENERATION_PROMPT,
+                  prompts.ENGLISH_VOCABULARY_ANSWER_EVALUATION_PROMPT
                   )
     GRAMMAR = ("Grammar Guru",
                "Enhancing grammatical knowledge and correcting sentence errors.",
-               prompts.ENGLISH_GRAMMAR_QUESTION_GENERATION,
-               prompts.ENGLISH_GRAMMAR_ANSWER_EVALUATION
+               prompts.ENGLISH_GRAMMAR_QUESTION_GENERATION_PROMPT,
+               prompts.ENGLISH_GRAMMAR_ANSWER_EVALUATION_PROMPT
+               )
+    READING = ("Reading Comprehension",
+               "Improving reading comprehension skills and understanding written passages.",
+               prompts.ENGLISH_READING_QUESTION_GENERATION_PROMPT,
+               prompts.ENGLISH_READING_ANSWER_EVALUATION_PROMPT
                )
 
     def __init__(self, value, description, question_generation_prompt, answer_evaluation_prompt):
@@ -39,8 +44,8 @@ class MathSkill(Enum):
 
     ARITHMETIC = ("Arithmetic",
                   "Sharpen your mental math skills with a series of quick-fire arithmetic challenges.",
-                  prompts.ENGLISH_VOCABULARY_QUESTION_GENERATION,
-                  prompts.ENGLISH_VOCABULARY_ANSWER_EVALUATION
+                  prompts.ENGLISH_VOCABULARY_QUESTION_GENERATION_PROMPT,
+                  prompts.ENGLISH_VOCABULARY_ANSWER_EVALUATION_PROMPT
                   )
 
     def __init__(self, value, description, question_generation_prompt, answer_evaluation_prompt):

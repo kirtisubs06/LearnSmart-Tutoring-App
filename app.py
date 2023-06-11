@@ -268,15 +268,19 @@ def process_question(skill, question):
         keyword = "Word:"
     elif skill is EnglishSkill.GRAMMAR:
         keyword = "Sentence:"
+    elif skill is EnglishSkill.READING:
+        keyword = "Passage:"
 
     lines = question.splitlines()
 
+    text = ""
     for line in lines:
         if line.startswith(keyword):
-            word = line[len(keyword):].strip()
-            return keyword.strip(), word
+            text = line[len(keyword):].strip()
+        else:
+            text += "\n" + line
 
-    return None, None
+    return keyword.strip(), text
 
 
 def get_answer():
@@ -301,12 +305,21 @@ def evaluate(skill, question, answer):
     response = llm(skill.answer_evaluation_prompt.format(question=question, answer=answer))
     print(response)
     lines = response.splitlines()
+    key = None
+    value = ""
     for line in lines:
         if len(line) <= 0:
             continue
 
-        key, value = line.split(":", 1)
-        process(skill, key, value)
+        if ':' in line:
+            if key is not None:
+                process(skill, key, value.strip())
+            key, value = line.split(":", 1)
+        else:
+            value += "\n" + line
+
+    if key is not None:
+        process(skill, key, value.strip())
 
 
 def process(skill, key, value):
@@ -335,6 +348,13 @@ def process(skill, key, value):
             st.write("**Usage:**")
             st.write(value)
     elif skill is EnglishSkill.GRAMMAR:
+        if key == "Solution":
+            st.write("**Correct Answer:**")
+            st.write(value)
+        elif key == "Misc":
+            st.write("**Analysis:**")
+            st.write(value)
+    elif skill is EnglishSkill.READING:
         if key == "Solution":
             st.write("**Correct Answer:**")
             st.write(value)

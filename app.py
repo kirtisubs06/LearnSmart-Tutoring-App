@@ -269,15 +269,7 @@ def process_question(skill, question):
     if not question:
         return None, None
 
-    lines = question.splitlines()
-
-    label = ""
-    text = ""
-    for line in lines:
-        if ":" in line and label == "":
-            label, text = line.split(":", 1)
-        else:
-            text += "\n" + line
+    label, text = question.split(":", 1)
     return label.strip(), text.strip()
 
 

@@ -7,6 +7,7 @@ from langchain import LLMMathChain
 
 from level import Level
 from skill import EnglishSkill, MathSkill
+from stats import Stats
 from topic import Topic
 
 from gtts import gTTS
@@ -24,7 +25,12 @@ def load_llm(temperature):
                        model_name=os.environ["MODEL_NAME"])
 
 
+def get_stats():
+    return Stats()
+
+
 llm = load_llm(0.9)
+stats = get_stats()
 
 
 def main():
@@ -39,6 +45,12 @@ def set_env():
     os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
     os.environ["MODEL_NAME"] = st.secrets["MODEL_NAME"]
     os.environ["DEPLOYMENT_NAME"] = st.secrets["DEPLOYMENT_NAME"]
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = st.secrets["GOOGLE_APPLICATION_CREDENTIALS"]
+    os.environ["SQL_SERVER"] = st.secrets["SQL_SERVER"]
+    os.environ["SQL_DATABASE"] = st.secrets["SQL_DATABASE"]
+    os.environ["SQL_USERNAME"] = st.secrets["SQL_USERNAME"]
+    os.environ["SQL_PASSWORD"] = st.secrets["SQL_PASSWORD"]
+    os.environ["MYSQL_CONNECTION_STRING"] = st.secrets["MYSQL_CONNECTION_STRING"]
 
 
 def homepage():

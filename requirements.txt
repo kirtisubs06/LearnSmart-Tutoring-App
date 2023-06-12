@@ -2,3 +2,5 @@ langchain==0.0.195
 openai==0.27.8
 streamlit==1.23.1
 gTTS==2.3.2
+cloud-sql-python-connector==1.2.3
+PyMySQL==1.0.3

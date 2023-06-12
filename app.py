@@ -3,7 +3,6 @@ import os
 import streamlit as st
 from langchain.llms import AzureOpenAI
 from langchain import LLMMathChain
-from streamlit.runtime.state import NoValue
 
 from level import Level
 from skill import EnglishSkill, MathSkill
@@ -40,39 +39,23 @@ def set_env():
 
 
 def homepage():
-    # Show title and intro
     show_app_title_and_introduction()
-    # Show sidebar
     show_sidebar()
-    # Get the selected topic
     topic = get_topic()
-    # Get the selected Skill
     skill = get_skill(topic)
-    # Get the selected level
     level = get_level()
-    # Initialize session
     session_start, topic_changed, skill_changed, level_changed = \
         initialize_session(topic, skill, level)
-    # Show the lesson
     show_lesson(topic, skill, level)
-    # Show next button
-    button_clicked = show_next_challenge()
+    next_challenge = show_next_challenge()
     label = st.session_state["question"][0]
     question = st.session_state["question"][1]
-    # If this is the start of a session or the "next challenge" button was clicked
-    # generate the question
-    if button_clicked or session_start or topic_changed or skill_changed or level_changed:
+    if next_challenge or session_start or topic_changed or skill_changed or level_changed:
         clear_answer()
         label, question = get_question(topic, skill, level)
-    # Show question
-    print(question)
     show_question(label, question)
-    # Get answer
     answer = get_answer(skill)
-    print(answer)
-    # Submit button
     show_submit()
-    # Evaluate the answer
     evaluate(topic, skill, question, answer)
 
 
@@ -92,8 +75,7 @@ def show_app_title_and_introduction():
 
             With interactive exercises and real-time feedback, you can track your progress and identify areas 
             for improvement. LearnSmart is your go-to tool for mastering English and Math in an enjoyable and 
-            effective way. Join hundreds of learners who have already completed 0 
-            sessions and conquered 0 challenges on their learning journey.
+            effective way. 
 
             Start your learning journey with LearnSmart today and unlock your full potential in English and Math!
         """)
@@ -165,9 +147,7 @@ def clear_answer():
 
 
 def get_question(topic, skill, level):
-    # Get the generated question from LLM
     response = llm(skill.question_generation_prompt.format(level=level))
-    # Parse the response and get the label and the text
     label, question = process_question(skill, response)
     st.session_state["question"] = (label, question)
     return label, question
@@ -190,7 +170,7 @@ def get_answer(skill):
     if skill is EnglishSkill.WRITING or skill is EnglishSkill.READING:
         answer = st.text_area(label="Answer", key="answer")
     elif skill is MathSkill.ARITHMETIC:
-        answer = st.number_input(label="Answer", key="numeric_answer", step=None, value=NoValue())
+        answer = st.number_input(label="Answer", key="numeric_answer")
     else:
         answer = st.text_input(label="Answer", key="answer")
 
@@ -217,30 +197,30 @@ def evaluate_math(skill, question, answer):
     answer, value = round(float(answer), 2), round(float(value), 2)
     score = 1.0 if answer == value else 0.0
     response = f"Score: {score}\nCorrect answer: {value}"
-    process_response(skill, response)
+    process_response(response)
 
 
 def evaluate_english(skill, question, answer):
     response = llm(skill.answer_evaluation_prompt.format(question=question, answer=answer))
-    process_response(skill, response)
+    process_response(response)
 
 
-def process_response(skill, response):
+def process_response(response):
     key = ""
     value = ""
     for line in response.splitlines():
         if ':' in line:
             if value:
-                process(skill, key.strip(), value.strip())
+                process(key.strip(), value.strip())
             key, value = line.split(":", 1)
         else:
             value += line
 
     if value:
-        process(skill, key.strip(), value.strip())
+        process(key.strip(), value.strip())
 
 
-def process(skill, key, value):
+def process(key, value):
     if key == "Score":
         process_score(value)
     else:

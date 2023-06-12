@@ -20,7 +20,7 @@ ENGLISH_VOCABULARY_ANSWER_EVALUATION_PROMPT = """
     Please carefully evaluate the meaning provided and provide the following information:
 
     Score: [Should be a value between 0 and 1, representing your assessment of the accuracy of the answer provided]
-    Solution: [Provide the correct meaning of the word.]
+    Meaning: [Provide the correct meaning of the word.]
     Usage: [Should be an example sentence using the word]
     """
 
@@ -50,7 +50,7 @@ ENGLISH_GRAMMAR_ANSWER_EVALUATION_PROMPT = """
 
     Score: [Should be a value between 0 and 1, representing your assessment of the accuracy of the 
             answer provided. Spelling mistakes should result in something less than 0.5.]
-    Solution: [Re-write the sentence without grammatical errors.]   
+    Correct answer: [Re-write the sentence without grammatical errors.]   
     Analysis: [Provide an analysis of the answer]
 
     Your evaluation should be based on the following conditions: 

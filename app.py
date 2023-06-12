@@ -26,18 +26,12 @@ llm = load_llm(0.9)
 
 
 def main():
-    """
-    The main function that serves as the entry point for the Streamlit application.
-    """
     st.set_page_config(page_title="Learning Smart", layout="wide")
     set_env()
     homepage()
 
 
 def set_env():
-    """
-    Set all the environment variables
-    """
     os.environ["OPENAI_API_TYPE"] = st.secrets["OPENAI_API_TYPE"]
     os.environ["OPENAI_API_BASE"] = st.secrets["OPENAI_API_BASE"]
     os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
@@ -46,9 +40,6 @@ def set_env():
 
 
 def homepage():
-    """
-    The homepage function represents the main user interface of the Streamlit application.
-    """
     # Show title and intro
     show_app_title_and_introduction()
     # Show sidebar
@@ -86,9 +77,6 @@ def homepage():
 
 
 def show_app_title_and_introduction():
-    """
-    Show the app title and introduction
-    """
     st.title("Welcome to LearnSmart!")
     st.write(f"""
             LearnSmart is a tool to enhance your English and Math skills!
@@ -112,17 +100,10 @@ def show_app_title_and_introduction():
 
 
 def show_sidebar():
-    """
-    Show the sidebar
-    """
     st.sidebar.title("LearnSmart")
 
 
 def get_topic():
-    """
-    Get the topic
-    :return: topic
-    """
     topic = Topic.from_value(st.sidebar.selectbox(
         "Select a topic:",
         [topic.value for topic in Topic]))
@@ -130,11 +111,6 @@ def get_topic():
 
 
 def get_skill(topic):
-    """
-    Get the skill
-    :param topic:
-    :return: skill
-    """
     skill = None
     if topic is Topic.ENGLISH:
         skill = EnglishSkill.from_value(st.sidebar.selectbox(
@@ -150,10 +126,6 @@ def get_skill(topic):
 
 
 def get_level():
-    """
-    Get the level
-    :return: level
-    """
     level = Level.from_value(st.sidebar.selectbox(
         "Select a difficulty level:",
         [level.value for level in Level]))
@@ -161,84 +133,38 @@ def get_level():
 
 
 def initialize_session(topic, skill, level):
-    """
-    Set the topic, skill and level in the session
-    :param topic:
-    :param skill:
-    :param level:
-    :return: (session_start indicator, topic change indicator, skill change indicator, level change indicator)
-    """
-    session_start = False
-    topic_changed = False
-    skill_changed = False
-    level_changed = False
+    session_start = "topic" not in st.session_state or \
+                    "skill" not in st.session_state or \
+                    "level" not in st.session_state
+    topic_changed = st.session_state.get("topic") != topic
+    skill_changed = st.session_state.get("skill") != skill
+    level_changed = st.session_state.get("level") != level
 
-    # Topic
-    if "topic" not in st.session_state:
-        session_start = True
-        st.session_state["topic"] = topic
-    elif st.session_state["topic"] != topic:
-        topic_changed = True
-        st.session_state["topic"] = topic
-
-    # Skill
-    if "skill" not in st.session_state:
-        session_start = True
-        st.session_state["skill"] = skill
-    elif st.session_state["skill"] != skill:
-        skill_changed = True
-        st.session_state["skill"] = skill
-
-    # Level
-    if "level" not in st.session_state:
-        session_start = True
-        st.session_state["level"] = level
-    elif st.session_state["level"] != level:
-        level_changed = True
-        st.session_state["level"] = level
+    st.session_state["topic"] = topic
+    st.session_state["skill"] = skill
+    st.session_state["level"] = level
 
     if session_start:
         st.session_state["question"] = None, None
+
     return session_start, topic_changed, skill_changed, level_changed
 
 
 def show_lesson(topic, skill, level):
-    """
-    Show the lesson
-    :param topic:
-    :param skill:
-    :param level:
-    :return:
-    """
     st.header(skill.value)
     st.markdown(f"_{skill.description}_")
 
 
 def show_next_challenge():
-    """
-    Display the "Next Challenge" button
-    :return:
-    """
     return st.button(f"Next challenge", on_click=clear_answer, type="primary")
 
 
 def clear_answer():
-    """
-    Clear the answer
-    :return:
-    """
     st.session_state["answer"] = ""
     st.session_state["numeric_answer"] = 0.0
 
 
 def get_question(topic, skill, level):
-    """
-    Invoke the LLM and generate the question
-    :param topic:
-    :param skill:
-    :param level:
-    :return: label, question
-    """
     # Get the generated question from LLM
     response = llm(skill.question_generation_prompt.format(level=level))
     # Parse the response and get the label and the text
@@ -248,24 +174,11 @@ def get_question(topic, skill, level):
 
 
 def show_question(label, question):
-    """
-    Display the label and the question
-    :param label:
-    :param question:
-    :return:
-    """
-    # Display
     st.write(f"**{label}**")
     st.write(question)
 
 
 def process_question(skill, question):
-    """
-    Process the LLM response and extract the question label and question
-    :param skill:
-    :param question:
-    :return: question label, question
-    """
     if not question:
         return None, None
 
@@ -274,10 +187,6 @@ def process_question(skill, question):
 
 
 def get_answer(skill):
-    """
-    Capture the user response
-    :return: user response
-    """
     if skill is EnglishSkill.WRITING or skill is EnglishSkill.READING:
         answer = st.text_area(label="Answer", key="answer")
     elif skill is MathSkill.ARITHMETIC:
@@ -289,10 +198,6 @@ def get_answer(skill):
 
 
 def show_submit():
-    """
-    Display the "Submit" button
-    :return:
-    """
     return st.button(f"Submit", type="primary")
 
 
@@ -336,26 +241,22 @@ def process_response(skill, response):
 
 
 def process(skill, key, value):
-    """
-    Process the LLM response for answer evaluation. For different skills,
-    different labels and questions appear.
-    :param skill:
-    :param key:
-    :param value:
-    :return:
-    """
     if key == "Score":
-        score = float(value)
-        print("Score:", score)
-        if 0.0 <= score <= 0.5:
-            st.error("Keep trying. You can do better!")
-        elif 0.5 < score <= 0.8:
-            st.warning("Good job! Almost there.")
-        else:
-            st.success("Great job!")
+        process_score(value)
     else:
         st.write(f"**{key}:**")
         st.write(value)
+
+
+def process_score(value):
+    score = float(value)
+    print("Score:", score)
+    if 0.0 <= score <= 0.5:
+        st.error("Keep trying. You can do better!")
+    elif 0.5 < score <= 0.8:
+        st.warning("Good job! Almost there.")
+    else:
+        st.success("Great job!")
 
 
 if __name__ == "__main__":

@@ -24,6 +24,10 @@ class EnglishSkill(Enum):
                "Developing writing abilities by creating coherent and expressive paragraphs.",
                prompts.ENGLISH_WRITING_QUESTION_GENERATION_PROMPT,
                prompts.ENGLISH_WRITING_ANSWER_EVALUATION_PROMPT)
+    SPELLING = ("Spelling",
+                "Enhancing spelling skills through auditory word recognition and accurate spelling practice.",
+                prompts.ENGLISH_VOCABULARY_QUESTION_GENERATION_PROMPT,
+                prompts.ENGLISH_SPELLING_ANSWER_EVALUATION_PROMPT)
 
     def __init__(self, value, description, question_generation_prompt, answer_evaluation_prompt):
         self._value_ = value

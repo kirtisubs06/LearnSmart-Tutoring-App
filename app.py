@@ -1,4 +1,5 @@
 import os
+import tempfile
 
 import streamlit as st
 from langchain.llms import AzureOpenAI
@@ -7,6 +8,8 @@ from langchain import LLMMathChain
 from level import Level
 from skill import EnglishSkill, MathSkill
 from topic import Topic
+
+from gtts import gTTS
 
 
 def load_llm(temperature):
@@ -46,14 +49,14 @@ def homepage():
     level = get_level()
     session_start, topic_changed, skill_changed, level_changed = \
         initialize_session(topic, skill, level)
-    show_lesson(topic, skill, level)
+    show_lesson(skill)
     next_challenge = show_next_challenge()
     label = st.session_state["question"][0]
     question = st.session_state["question"][1]
     if next_challenge or session_start or topic_changed or skill_changed or level_changed:
         clear_answer()
-        label, question = get_question(topic, skill, level)
-    show_question(label, question)
+        label, question = get_question(skill, level)
+    show_question(skill, label, question)
     answer = get_answer(skill)
     show_submit()
     evaluate(topic, skill, question, answer)
@@ -62,22 +65,22 @@ def homepage():
 def show_app_title_and_introduction():
     st.title("Welcome to LearnSmart!")
     st.write(f"""
-            LearnSmart is a tool to enhance your English and Math skills!
+        LearnSmart is a tool to enhance your English and Math skills!
 
-            It is an interactive app that helps you learn and improve your proficiency in English and Math. 
-            Dive into engaging lessons, practice exercises, and quizzes to strengthen your knowledge and 
-            understanding of these subjects.
+        It is an interactive app that helps you learn and improve your proficiency in English and Math. 
+        Dive straight into a vast collection of practice exercises, covering a wide range of skills,
+        to strengthen your knowledge and understanding of these subjects.
 
-            Whether you're a student looking to excel in school or someone wanting to sharpen your skills, 
-            LearnSmart provides a comprehensive learning experience. From grammar and vocabulary to 
-            problem-solving and mathematical concepts, explore a wide range of topics and level up your 
-            abilities.
+        Whether you're a student looking to excel in school or someone wanting to sharpen your skills, 
+        LearnSmart provides a comprehensive learning experience. From grammar and vocabulary to 
+        problem-solving and mathematical concepts, explore a wide range of topics and level up your 
+        abilities.
 
-            With interactive exercises and real-time feedback, you can track your progress and identify areas 
-            for improvement. LearnSmart is your go-to tool for mastering English and Math in an enjoyable and 
-            effective way. 
+        With interactive exercises and real-time feedback, you can track your progress and identify areas 
+        for improvement. LearnSmart is your go-to tool for mastering English and Math in an enjoyable and 
+        effective way. 
 
-            Start your learning journey with LearnSmart today and unlock your full potential in English and Math!
+        Start your learning journey with LearnSmart today and unlock your full potential in English and Math!
         """)
 
 
@@ -132,7 +135,7 @@ def initialize_session(topic, skill, level):
     return session_start, topic_changed, skill_changed, level_changed
 
 
-def show_lesson(topic, skill, level):
+def show_lesson(skill):
     st.header(skill.value)
     st.markdown(f"_{skill.description}_")
 
@@ -146,19 +149,39 @@ def clear_answer():
     st.session_state["numeric_answer"] = 0.0
 
 
-def get_question(topic, skill, level):
+def get_question(skill, level):
     response = llm(skill.question_generation_prompt.format(level=level))
-    label, question = process_question(skill, response)
+    label, question = process_question(response)
     st.session_state["question"] = (label, question)
     return label, question
 
 
-def show_question(label, question):
-    st.write(f"**{label}**")
-    st.write(question)
+def show_question(skill, label, question):
+    if skill is EnglishSkill.SPELLING:
+        audio_display(question)
+    else:
+        st.write(f"**{label}**")
+        st.write(question)
 
 
-def process_question(skill, question):
+def audio_display(question):
+    tts = gTTS(question)
+    temp_file = tempfile.NamedTemporaryFile(delete=False)
+    temp_filename = temp_file.name
+    temp_file.close()
+    tts.save(temp_filename)
+
+    # Generate a unique ID for the audio element
+    audio_id = st.empty().audio(temp_filename, format='audio/wav')
+
+    # Function to handle the button click event
+    def play_audio():
+        with open(temp_filename, 'rb') as audio_file:
+            audio_bytes = audio_file.read()
+        audio_id.audio(audio_bytes, format='audio/wav')
+
+
+def process_question(question):
     if not question:
         return None, None
 
@@ -191,12 +214,14 @@ def evaluate(topic, skill, question, answer):
 
 
 def evaluate_math(skill, question, answer):
-    llm_math = LLMMathChain.from_llm(llm, verbose=True)
-    response = llm_math.run(question)
-    key, value = response.split(":", 1)
-    answer, value = round(float(answer), 2), round(float(value), 2)
-    score = 1.0 if answer == value else 0.0
-    response = f"Score: {score}\nCorrect answer: {value}"
+    response = ""
+    if skill is MathSkill.ARITHMETIC:
+        llm_math = LLMMathChain.from_llm(llm, verbose=True)
+        response = llm_math.run(question)
+        key, value = response.split(":", 1)
+        answer, value = round(float(answer), 2), round(float(value), 2)
+        score = 1.0 if answer == value else 0.0
+        response = f"Score: {score}\nCorrect answer: {value}"
     process_response(response)
 
 
@@ -232,9 +257,9 @@ def process_score(value):
     score = float(value)
     print("Score:", score)
     if 0.0 <= score <= 0.5:
-        st.error("Keep trying. You can do better!")
+        st.error("Keep trying! You can do better!")
     elif 0.5 < score <= 0.8:
-        st.warning("Good job! Almost there.")
+        st.warning("Good job! Almost there!")
     else:
         st.success("Great job!")
 

@@ -140,6 +140,19 @@ ENGLISH_WRITING_ANSWER_EVALUATION_PROMPT = """
     to help the writer enhance their writing skills. Address the user as "You" to establish a supportive and 
     personalized tone. 
     """
+ENGLISH_SPELLING_ANSWER_EVALUATION_PROMPT = """
+    As an exceptional language coach, your expertise lies in helping users learn a new language effectively.
+    A crucial aspect of language learning is spelling. 
+
+    Word: {question}
+    Answer: {answer}
+
+    Please carefully evaluate the word provided and provide the following information:
+
+    Score: [Please return 1.0 if the answer exactly matches the questions case insensitively. If not return 0.0]
+    Correct answer: [Please provide the spelling of the word along with its meaning] 
+    Usage: [Please provide a usage of the word]
+    """
 
 MATH_QUESTION_GENERATION_PROMPT = """
     As an exceptional math coach, your expertise lies in helping users effectively master arithmetic. 

@@ -13,7 +13,7 @@ class Stats:
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
             temp_file.write(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
             temp_file_path = temp_file.name
-            
+
         # Use the temporary file path as the value for GOOGLE_APPLICATION_CREDENTIALS
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_file_path
 
@@ -107,7 +107,7 @@ class Stats:
 
     def get_top_reviews(self, limit=10):
         cursor = self.connection.cursor()
-        cursor.execute("SELECT score, comment FROM reviews ORDER BY score DESC LIMIT %s", (limit,))
+        cursor.execute("SELECT score, comment FROM reviews order by id DESC LIMIT %s", (limit,))
         top_reviews = cursor.fetchall()
         cursor.close()
         return top_reviews

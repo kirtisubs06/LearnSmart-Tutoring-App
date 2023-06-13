@@ -52,18 +52,20 @@ def set_env():
 def homepage(llm, stats):
     show_app_title_and_introduction(stats)
     topic, skill, level = show_sidebar()
-    session_start, topic_changed, skill_changed, level_changed = \
+    topic_changed, skill_changed, level_changed = \
         initialize_session(stats, topic, skill, level)
     show_lesson(skill)
-    next_challenge = show_next_challenge()
+
     label = st.session_state["question"][0]
     question = st.session_state["question"][1]
-    if next_challenge or session_start or topic_changed or skill_changed or level_changed:
+    next_challenge = st.session_state["next_challenge"]
+    if next_challenge or topic_changed or skill_changed or level_changed:
         clear_answer()
         label, question = get_question(llm, stats, skill, level)
+        clear_next_challenge()
     show_question(skill, label, question)
     answer = get_answer(skill)
-    show_submit()
+    show_submit_and_next_challenge()
     evaluate(llm, topic, skill, question, answer)
     show_stats_and_rating(stats)
 
@@ -138,8 +140,9 @@ def initialize_session(stats, topic, skill, level):
 
     if session_start:
         st.session_state["question"] = None, None
+        st.session_state["next_challenge"] = True
 
-    return session_start, topic_changed, skill_changed, level_changed
+    return topic_changed, skill_changed, level_changed
 
 
 def show_lesson(skill):
@@ -154,6 +157,11 @@ def show_next_challenge():
 def clear_answer():
     st.session_state["answer"] = ""
     st.session_state["numeric_answer"] = 0.0
+    st.session_state["next_challenge"] = True
+
+
+def clear_next_challenge():
+    st.session_state["next_challenge"] = False
 
 
 def get_question(llm, stats, skill, level):
@@ -208,8 +216,12 @@ def get_answer(skill):
     return answer
 
 
-def show_submit():
-    return st.button(f"Submit", type="primary")
+def show_submit_and_next_challenge():
+    col1, col2, col3 = st.columns((1, 2, 7))
+    with col1:
+        st.button(f"Submit", type="primary")
+    with col2:
+        st.session_state["next_challenge"] = show_next_challenge()
 
 
 def evaluate(llm, topic, skill, question, answer):
@@ -336,8 +348,8 @@ def show_review_stats(stats):
 
 
 def show_reviews(stats):
-    st.markdown("<h1 style='font-size: 24px;'>Top 5 reviews</h1>", unsafe_allow_html=True)
-    top_reviews = stats.get_top_reviews(5)
+    st.markdown("<h1 style='font-size: 24px;'>Reviews</h1>", unsafe_allow_html=True)
+    top_reviews = stats.get_top_reviews()
     for review in top_reviews:
         rating_stars = '<span style="font-size: smaller;">★</span>' * int(round(review[0]))
         review = f'<span style="font-size: smaller;">{review[1]}</span>'
@@ -345,9 +357,6 @@ def show_reviews(stats):
 
 
 def show_stats_and_rating(stats):
-    # Draw a horizontal line
-    st.markdown("<hr>", unsafe_allow_html=True)
-
     # Define the column layout
     col1, col2, col3, col4, col5 = st.columns((3, 1, 2, 1, 2))
 

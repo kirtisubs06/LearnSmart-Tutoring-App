@@ -136,6 +136,7 @@ def initialize_session(topic, skill, level):
     session_start = "topic" not in st.session_state or \
                     "skill" not in st.session_state or \
                     "level" not in st.session_state
+    stats.increment_session_counter()
     topic_changed = st.session_state.get("topic") != topic
     skill_changed = st.session_state.get("skill") != skill
     level_changed = st.session_state.get("level") != level
@@ -165,6 +166,7 @@ def clear_answer():
 
 
 def get_question(skill, level):
+    stats.increment_stats_counters(skill, level)
     response = llm(skill.question_generation_prompt.format(level=level))
     label, question = process_question(response)
     st.session_state["question"] = (label, question)

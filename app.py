@@ -5,7 +5,6 @@ import streamlit as st
 from langchain.llms import AzureOpenAI
 from langchain import LLMMathChain
 from matplotlib import pyplot as plt
-import streamlit.components.v1 as components
 
 from level import Level
 from skill import EnglishSkill, MathSkill
@@ -27,18 +26,13 @@ def load_llm(temperature):
                        model_name=os.environ["MODEL_NAME"])
 
 
-def get_stats():
-    return Stats()
-
-
-llm = load_llm(0.9)
-stats = get_stats()
-
-
 def main():
     st.set_page_config(page_title="Learning Smart", layout="wide")
     set_env()
-    homepage()
+    llm = load_llm(0.9)
+    stats = Stats()
+    stats.connect()
+    homepage(llm, stats)
 
 
 def set_env():
@@ -55,26 +49,26 @@ def set_env():
     os.environ["MYSQL_CONNECTION_STRING"] = st.secrets["MYSQL_CONNECTION_STRING"]
 
 
-def homepage():
-    show_app_title_and_introduction()
+def homepage(llm, stats):
+    show_app_title_and_introduction(stats)
     topic, skill, level = show_sidebar()
     session_start, topic_changed, skill_changed, level_changed = \
-        initialize_session(topic, skill, level)
+        initialize_session(stats, topic, skill, level)
     show_lesson(skill)
     next_challenge = show_next_challenge()
     label = st.session_state["question"][0]
     question = st.session_state["question"][1]
     if next_challenge or session_start or topic_changed or skill_changed or level_changed:
         clear_answer()
-        label, question = get_question(skill, level)
+        label, question = get_question(llm, stats, skill, level)
     show_question(skill, label, question)
     answer = get_answer(skill)
     show_submit()
-    evaluate(topic, skill, question, answer)
-    show_stats_and_rating()
+    evaluate(llm, topic, skill, question, answer)
+    show_stats_and_rating(stats)
 
 
-def show_app_title_and_introduction():
+def show_app_title_and_introduction(stats):
     total_challenges = stats.get_total_counters()
     total_sessions = stats.get_session_counter()
     st.title("Welcome to LearnSmart!")
@@ -85,7 +79,8 @@ def show_app_title_and_introduction():
 
         Whether you're a student or someone wanting to sharpen your skills, LearnSmart provides a comprehensive 
         learning experience. From grammar and vocabulary to problem-solving and mathematical concepts, explore 
-        a wide range of topics and level up your abilities. Join hundreds of learners who have completed **{total_sessions}** sessions and conquered **{total_challenges}** challenges.
+        a wide range of topics and level up your abilities. Join hundreds of learners who have completed 
+        **{total_sessions}** sessions and conquered **{total_challenges}** challenges. 
         
         Start your learning journey with LearnSmart today and unlock your full potential in English and Math!
     """)
@@ -128,7 +123,7 @@ def get_level():
     return level
 
 
-def initialize_session(topic, skill, level):
+def initialize_session(stats, topic, skill, level):
     session_start = "topic" not in st.session_state or \
                     "skill" not in st.session_state or \
                     "level" not in st.session_state
@@ -161,7 +156,7 @@ def clear_answer():
     st.session_state["numeric_answer"] = 0.0
 
 
-def get_question(skill, level):
+def get_question(llm, stats, skill, level):
     stats.increment_stats_counters(skill, level)
     response = llm(skill.question_generation_prompt.format(level=level))
     label, question = process_question(response)
@@ -217,16 +212,16 @@ def show_submit():
     return st.button(f"Submit", type="primary")
 
 
-def evaluate(topic, skill, question, answer):
+def evaluate(llm, topic, skill, question, answer):
     if not answer:
         return
     if topic is Topic.MATH:
-        evaluate_math(skill, question, answer)
+        evaluate_math(llm, skill, question, answer)
     elif topic is Topic.ENGLISH:
-        evaluate_english(skill, question, answer)
+        evaluate_english(llm, skill, question, answer)
 
 
-def evaluate_math(skill, question, answer):
+def evaluate_math(llm, skill, question, answer):
     response = ""
     if skill is MathSkill.ARITHMETIC:
         llm_math = LLMMathChain.from_llm(llm, verbose=True)
@@ -238,7 +233,7 @@ def evaluate_math(skill, question, answer):
     process_response(response)
 
 
-def evaluate_english(skill, question, answer):
+def evaluate_english(llm, skill, question, answer):
     response = llm(skill.answer_evaluation_prompt.format(question=question, answer=answer))
     process_response(response)
 
@@ -277,7 +272,7 @@ def process_score(value):
         st.success("Great job!")
 
 
-def show_app_stats():
+def show_app_stats(stats):
     """
     Display the app stats in the main section.
     """
@@ -316,7 +311,7 @@ def show_app_stats():
     st.markdown(text, unsafe_allow_html=True)
 
 
-def show_review_form():
+def show_review_form(stats):
     st.markdown("<h1 style='font-size: 24px;'>Rate App</h1>", unsafe_allow_html=True)
     rating = st.slider("", 1, 5, 3, key="slider_rating", format="%d",
                        help="Drag the slider to rate the app")
@@ -330,7 +325,7 @@ def show_review_form():
 
 
 # Display the review stats
-def show_review_stats():
+def show_review_stats(stats):
     num_reviews, avg_rating = stats.get_review_stats()
     st.write(
         f'<span style="font-size: smaller;">Average rating: **{avg_rating} ({num_reviews}** reviews)</span>',
@@ -340,7 +335,7 @@ def show_review_stats():
              unsafe_allow_html=True)
 
 
-def show_reviews():
+def show_reviews(stats):
     st.markdown("<h1 style='font-size: 24px;'>Top 5 reviews</h1>", unsafe_allow_html=True)
     top_reviews = stats.get_top_reviews(5)
     for review in top_reviews:
@@ -349,7 +344,7 @@ def show_reviews():
         st.write(f"{rating_stars} {review}", unsafe_allow_html=True)
 
 
-def show_stats_and_rating():
+def show_stats_and_rating(stats):
     # Draw a horizontal line
     st.markdown("<hr>", unsafe_allow_html=True)
 
@@ -358,12 +353,12 @@ def show_stats_and_rating():
 
     # Display the usage stats in the columns
     with col1:
-        show_app_stats()
+        show_app_stats(stats)
     with col3:
-        show_review_form()
-        show_review_stats()
+        show_review_form(stats)
+        show_review_stats(stats)
     with col5:
-        show_reviews()
+        show_reviews(stats)
 
 
 if __name__ == "__main__":

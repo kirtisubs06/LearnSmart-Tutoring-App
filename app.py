@@ -68,6 +68,7 @@ def homepage(llm, stats):
     show_submit_and_next_challenge()
     evaluate(llm, topic, skill, question, answer)
     show_stats_and_rating(stats)
+    show_copyright()
 
 
 def show_app_title_and_introduction(stats):
@@ -368,6 +369,16 @@ def show_stats_and_rating(stats):
         show_review_stats(stats)
     with col5:
         show_reviews(stats)
+
+
+def show_copyright():
+    footer_html = """
+            <div style="position: absolute; bottom: 0; width: 100%; text-align: center; color: gray;">
+                <p style="font-size: 12px;">© 2023 LearnSmart LLC. All rights reserved.</p>
+            </div>
+            """
+
+    st.markdown(footer_html, unsafe_allow_html=True)
 
 
 if __name__ == "__main__":

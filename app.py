@@ -4,6 +4,8 @@ import tempfile
 import streamlit as st
 from langchain.llms import AzureOpenAI
 from langchain import LLMMathChain
+from matplotlib import pyplot as plt
+import streamlit.components.v1 as components
 
 from level import Level
 from skill import EnglishSkill, MathSkill
@@ -55,10 +57,7 @@ def set_env():
 
 def homepage():
     show_app_title_and_introduction()
-    show_sidebar()
-    topic = get_topic()
-    skill = get_skill(topic)
-    level = get_level()
+    topic, skill, level = show_sidebar()
     session_start, topic_changed, skill_changed, level_changed = \
         initialize_session(topic, skill, level)
     show_lesson(skill)
@@ -72,6 +71,7 @@ def homepage():
     answer = get_answer(skill)
     show_submit()
     evaluate(topic, skill, question, answer)
+    show_stats_and_rating()
 
 
 def show_app_title_and_introduction():
@@ -79,28 +79,24 @@ def show_app_title_and_introduction():
     total_sessions = stats.get_session_counter()
     st.title("Welcome to LearnSmart!")
     st.write(f"""
-        LearnSmart is a tool to enhance your English and Math skills!
+        LearnSmart is an interactive app that helps you enhance your English and Math skills. 
+        Dive into a collection of practice exercises, covering various skills, to strengthen your knowledge 
+        and understanding of these subjects.
 
-        It is an interactive app that helps you learn and improve your proficiency in English and Math. 
-        Dive straight into a vast collection of practice exercises, covering a wide range of skills,
-        to strengthen your knowledge and understanding of these subjects.
-
-        Whether you're a student looking to excel in school or someone wanting to sharpen your skills, 
-        LearnSmart provides a comprehensive learning experience. From grammar and vocabulary to 
-        problem-solving and mathematical concepts, explore a wide range of topics and level up your 
-        abilities.
-
-        With interactive exercises and real-time feedback, you can track your progress and identify areas 
-        for improvement. LearnSmart is your go-to tool for mastering English and Math in an enjoyable and 
-        effective way. Join hundreds of learners who have already completed **{total_sessions}** 
-        sessions and conquered **{total_challenges}** challenges on their learning journey.
-
+        Whether you're a student or someone wanting to sharpen your skills, LearnSmart provides a comprehensive 
+        learning experience. From grammar and vocabulary to problem-solving and mathematical concepts, explore 
+        a wide range of topics and level up your abilities. Join hundreds of learners who have completed **{total_sessions}** sessions and conquered **{total_challenges}** challenges.
+        
         Start your learning journey with LearnSmart today and unlock your full potential in English and Math!
-        """)
+    """)
 
 
 def show_sidebar():
     st.sidebar.title("LearnSmart")
+    topic = get_topic()
+    skill = get_skill(topic)
+    level = get_level()
+    return topic, skill, level
 
 
 def get_topic():
@@ -279,6 +275,95 @@ def process_score(value):
         st.warning("Good job! Almost there!")
     else:
         st.success("Great job!")
+
+
+def show_app_stats():
+    """
+    Display the app stats in the main section.
+    """
+    st.markdown("<h1 style='font-size: 24px;'>App Stats</h1>", unsafe_allow_html=True)
+    counter_dict = stats.get_counters()
+
+    # Consolidate the counters by skill only
+    data = []
+    for skill in list(MathSkill) + list(EnglishSkill):
+        skill_count = sum(counter_dict.get((skill.value, level.value), 0) for level in Level)
+        data.append((skill.value, skill_count))
+
+    # Extract the skill and count data
+    skills, counts = zip(*data)
+
+    # Create a wider bar chart
+    plt.figure(figsize=(15, 6))  # Increase the width to 15 inches
+
+    plt.bar(skills, counts, color='#4e98e0')
+
+    # Customize the chart
+    plt.xlabel('Skill', fontsize=14)  # Increase the font size for x-axis label
+    plt.ylabel('Count', fontsize=14)  # Increase the font size for y-axis label
+    plt.title('App Stats', fontsize=16)  # Increase the font size for title
+    plt.xticks(rotation=45, fontsize=16)  # Increase the font size for x-axis tick labels
+    plt.yticks(fontsize=16)  # Increase the font size for y-axis tick labels
+    plt.tight_layout()
+
+    # Display the bar chart
+    st.pyplot(plt)
+
+    # Display skill and count as text line by line
+    text = ""
+    for skill, count in zip(skills, counts):
+        text += f"<span style='font-size: smaller;'>{skill}: <b>{count}</b> challenges</span><br>"
+    st.markdown(text, unsafe_allow_html=True)
+
+
+def show_review_form():
+    st.markdown("<h1 style='font-size: 24px;'>Rate App</h1>", unsafe_allow_html=True)
+    rating = st.slider("", 1, 5, 3, key="slider_rating", format="%d",
+                       help="Drag the slider to rate the app")
+    comment = st.text_input("Please leave any comments or suggestions for improvement:")
+    if st.button("Submit Review", key="submit", type="primary"):
+        if rating > 0:
+            stats.add_review(rating, comment)
+            st.success("Thank you for your review!")
+        else:
+            st.warning("Please select a star rating before submitting.")
+
+
+# Display the review stats
+def show_review_stats():
+    num_reviews, avg_rating = stats.get_review_stats()
+    st.write(
+        f'<span style="font-size: smaller;">Average rating: **{avg_rating} ({num_reviews}** reviews)</span>',
+        unsafe_allow_html=True)
+    st.write('<span style="font-size: smaller;">★</span>' * int(
+        round(avg_rating)) + '<span style="font-size: smaller;">☆</span>' * int(5 - round(avg_rating)),
+             unsafe_allow_html=True)
+
+
+def show_reviews():
+    st.markdown("<h1 style='font-size: 24px;'>Top 5 reviews</h1>", unsafe_allow_html=True)
+    top_reviews = stats.get_top_reviews(5)
+    for review in top_reviews:
+        rating_stars = '<span style="font-size: smaller;">★</span>' * int(round(review[0]))
+        review = f'<span style="font-size: smaller;">{review[1]}</span>'
+        st.write(f"{rating_stars} {review}", unsafe_allow_html=True)
+
+
+def show_stats_and_rating():
+    # Draw a horizontal line
+    st.markdown("<hr>", unsafe_allow_html=True)
+
+    # Define the column layout
+    col1, col2, col3, col4, col5 = st.columns((3, 1, 2, 1, 2))
+
+    # Display the usage stats in the columns
+    with col1:
+        show_app_stats()
+    with col3:
+        show_review_form()
+        show_review_stats()
+    with col5:
+        show_reviews()
 
 
 if __name__ == "__main__":

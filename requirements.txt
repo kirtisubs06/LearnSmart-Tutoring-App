@@ -4,3 +4,4 @@ streamlit==1.23.1
 gTTS==2.3.2
 cloud-sql-python-connector==1.2.3
 PyMySQL==1.0.3
+matplotlib==3.7.1

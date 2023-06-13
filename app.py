@@ -75,6 +75,8 @@ def homepage():
 
 
 def show_app_title_and_introduction():
+    total_challenges = stats.get_total_counters()
+    total_sessions = stats.get_session_counter()
     st.title("Welcome to LearnSmart!")
     st.write(f"""
         LearnSmart is a tool to enhance your English and Math skills!
@@ -90,7 +92,8 @@ def show_app_title_and_introduction():
 
         With interactive exercises and real-time feedback, you can track your progress and identify areas 
         for improvement. LearnSmart is your go-to tool for mastering English and Math in an enjoyable and 
-        effective way. 
+        effective way. Join hundreds of learners who have already completed **{total_sessions}** 
+        sessions and conquered **{total_challenges}** challenges on their learning journey.
 
         Start your learning journey with LearnSmart today and unlock your full potential in English and Math!
         """)

@@ -181,5 +181,15 @@ MATH_ANSWER_EVALUATION_PROMPT = """
     Explanation: [Explain]   
     """
 
+ASSESSMENT_FEEDBACK_PROMPT = """
+    As an exceptional coach, your job is to provide honest feedback and identify areas for improvement 
+    based on the session scores provided below:
+    
+    Session Scores: {session_scores}
+    
+    When addressing the student, please use "You". Start your feedback with "Based on your scores".
+    Your feedback should focus on providing constructive guidance to help the student improve.
+"""
+
 
 

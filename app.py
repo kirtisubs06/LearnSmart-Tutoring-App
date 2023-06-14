@@ -6,11 +6,12 @@ from langchain.llms import AzureOpenAI
 from langchain import LLMMathChain
 from matplotlib import pyplot as plt
 
+import prompts
+from progresstracker import ProgressTracker
 from level import Level
 from skill import EnglishSkill, MathSkill
 from stats import Stats
 from topic import Topic
-
 from gtts import gTTS
 
 
@@ -47,11 +48,13 @@ def set_env():
     os.environ["SQL_USERNAME"] = st.secrets["SQL_USERNAME"]
     os.environ["SQL_PASSWORD"] = st.secrets["SQL_PASSWORD"]
     os.environ["MYSQL_CONNECTION_STRING"] = st.secrets["MYSQL_CONNECTION_STRING"]
+    os.environ["EMAIL_ID"] = st.secrets["EMAIL_ID"]
+    os.environ["EMAIL_PASSWORD"] = st.secrets["EMAIL_PASSWORD"]
 
 
 def homepage(llm, stats):
     show_app_title_and_introduction(stats)
-    topic, skill, level = show_sidebar()
+    topic, skill, level = show_sidebar(llm)
     topic_changed, skill_changed, level_changed = \
         initialize_session(stats, topic, skill, level)
     show_lesson(skill)
@@ -89,11 +92,24 @@ def show_app_title_and_introduction(stats):
     """)
 
 
-def show_sidebar():
+def show_sidebar(llm):
     st.sidebar.title("LearnSmart")
     topic = get_topic()
     skill = get_skill(topic)
     level = get_level()
+    email = get_email()
+    send = show_send_summary()
+    if send:
+        session_scores = ProgressTracker.get_session_scores()
+        if session_scores is not None:
+            feedback = llm(prompts.ASSESSMENT_FEEDBACK_PROMPT.format(
+                session_scores=ProgressTracker.get_session_scores()))
+            if ":" in feedback:
+                label, feedback = feedback.split(":", 1)
+            print(feedback)
+            ProgressTracker.send_summary(email, feedback)
+    st.sidebar.subheader("Session Scores:")
+    st.sidebar.markdown(ProgressTracker.get_summary_text(), unsafe_allow_html=True)
     return topic, skill, level
 
 
@@ -126,6 +142,10 @@ def get_level():
     return level
 
 
+def get_email():
+    return st.sidebar.text_input(label="Email:", key="email")
+
+
 def initialize_session(stats, topic, skill, level):
     session_start = "topic" not in st.session_state or \
                     "skill" not in st.session_state or \
@@ -153,6 +173,10 @@ def show_lesson(skill):
 
 def show_next_challenge():
     return st.button(f"Next challenge", on_click=clear_answer, type="primary")
+
+
+def show_send_summary():
+    return st.sidebar.button(f"Send summary", type="primary")
 
 
 def clear_answer():
@@ -222,7 +246,7 @@ def show_submit_and_next_challenge():
     with col1:
         st.button(f"Submit", type="primary")
     with col2:
-        st.session_state["next_challenge"] = show_next_challenge()
+        show_next_challenge()
 
 
 def evaluate(llm, topic, skill, question, answer):
@@ -248,27 +272,28 @@ def evaluate_math(llm, skill, question, answer):
 
 def evaluate_english(llm, skill, question, answer):
     response = llm(skill.answer_evaluation_prompt.format(question=question, answer=answer))
-    process_response(response)
+    process_response(skill, question, answer, response)
 
 
-def process_response(response):
+def process_response(skill, question, answer, response):
     key = ""
     value = ""
     for line in response.splitlines():
         if ':' in line:
             if value:
-                process(key.strip(), value.strip())
+                process(skill, question, answer, key.strip(), value.strip())
             key, value = line.split(":", 1)
         else:
             value += line
 
     if value:
-        process(key.strip(), value.strip())
+        process(skill, question, answer, key.strip(), value.strip())
 
 
-def process(key, value):
+def process(skill, question, answer, key, value):
     if key == "Score":
-        process_score(value)
+        points = process_score(value)
+        ProgressTracker.add_skill_track(skill, points)
     else:
         st.write(f"**{key}:**")
         st.write(value)
@@ -277,12 +302,15 @@ def process(key, value):
 def process_score(value):
     score = float(value)
     print("Score:", score)
+    points = 0
     if 0.0 <= score <= 0.5:
         st.error("Keep trying! You can do better!")
     elif 0.5 < score <= 0.8:
         st.warning("Good job! Almost there!")
     else:
         st.success("Great job!")
+        points = 1
+    return points
 
 
 def show_app_stats(stats):
@@ -326,7 +354,7 @@ def show_app_stats(stats):
 
 def show_review_form(stats):
     st.markdown("<h1 style='font-size: 24px;'>Rate App</h1>", unsafe_allow_html=True)
-    rating = st.slider("", 1, 5, 3, key="slider_rating", format="%d",
+    rating = st.slider("Scale", 1, 5, 3, key="slider_rating", format="%d",
                        help="Drag the slider to rate the app")
     comment = st.text_input("Please leave any comments or suggestions for improvement:")
     if st.button("Submit Review", key="submit", type="primary"):
@@ -374,7 +402,7 @@ def show_stats_and_rating(stats):
 def show_copyright():
     footer_html = """
             <div style="position: absolute; bottom: 0; width: 100%; text-align: center; color: gray;">
-                <p style="font-size: 12px;">© 2023 LearnSmart LLC. All rights reserved.</p>
+                <p style="font-size: 12px;">© 2023 LEARNSMART TUTORING LLC. All rights reserved.</p>
             </div>
             """
 

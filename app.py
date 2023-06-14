@@ -108,7 +108,8 @@ def show_sidebar(llm):
                 label, feedback = feedback.split(":", 1)
             print(feedback)
             ProgressTracker.send_summary(email, feedback)
-    st.sidebar.subheader("Session Scores:")
+    if ProgressTracker.get_session_scores() is not None:
+        st.sidebar.subheader("Session Scores:")
     st.sidebar.markdown(ProgressTracker.get_summary_text(), unsafe_allow_html=True)
     return topic, skill, level
 

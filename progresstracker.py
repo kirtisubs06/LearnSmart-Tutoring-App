@@ -2,6 +2,7 @@ import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from collections import namedtuple
 
 from email_validator import EmailNotValidError, validate_email
 import streamlit as st
@@ -12,7 +13,16 @@ from skill import EnglishSkill, MathSkill
 class ProgressTracker:
     @staticmethod
     def get_session_scores():
-        return st.session_state.get("summary")
+        summary = st.session_state.get("summary")
+        if summary is None:
+            return {}
+
+        Summary = namedtuple('Summary', ['challenges', 'points'])
+        session_scores = {
+            key: Summary(challenges, points)
+            for key, (challenges, points) in summary.items()
+        }
+        return session_scores
 
     @staticmethod
     def is_valid_email(email):
@@ -27,9 +37,12 @@ class ProgressTracker:
 
     # Function to send a verification email
     @staticmethod
-    def send_summary(email, feedback):
+    def send_summary(name, email, feedback):
+        if name == "":
+            st.sidebar.error("Please enter your name.")
         if email == "":
-            st.sidebar.error("Please enter an email address")
+            st.sidebar.error("Please enter an email address.")
+        if name == "" or email == "":
             return
 
         summary_text = ProgressTracker.get_summary_text()
@@ -38,51 +51,51 @@ class ProgressTracker:
             st.sidebar.error("No summary available")
             return
 
-        # Set up the email content
         subject = "LearnSmart Session Summary"
 
-        # Create the MIME message
         message = MIMEMultipart("alternative")
         message["Subject"] = subject
         message["From"] = os.environ["EMAIL_ID"]
         message["To"] = email
 
-        # Create the HTML part of the message
-        html = f"""
+        html = """
         <html>
         <body>
-            <p>{summary_text}</p>
+            <p><u>{name}'s scores:</u></p>
+            <p>{summary}</p>
+            <hr style='margin-top: 0.5em; margin-bottom: 0.5em;'>
             <p>{feedback}</p>
         </body>
         </html>
-        """
+        """.format(name=name, summary=summary_text, feedback=feedback)
 
-        # Attach the HTML part to the message
         message.attach(MIMEText(html, "html"))
 
-        # Create an SMTP session
         with smtplib.SMTP("smtp.gmail.com", 587) as server:
             server.starttls()
-            # Replace with your email credentials
             server.login(os.environ["EMAIL_ID"], os.environ["EMAIL_PASSWORD"])
             server.send_message(message)
 
     @staticmethod
     def add_skill_track(skill, point):
-        print(skill.value, point)
+        skill_key = skill.value
+        if skill is EnglishSkill.READING:
+            skill_key = "Reading"
         if st.session_state.get("summary") is None:
+            Summary = namedtuple('Summary', ['challenges', 'points'])
+
             st.session_state["summary"] = {
-                EnglishSkill.VOCABULARY.value: (0, 0),
-                EnglishSkill.GRAMMAR.value: (0, 0),
-                EnglishSkill.READING.value: (0, 0),
-                EnglishSkill.WRITING.value: (0, 0),
-                EnglishSkill.SPELLING.value: (0, 0),
-                MathSkill.ARITHMETIC.value: (0, 0),
+                EnglishSkill.VOCABULARY.value: Summary(0, 0),
+                EnglishSkill.GRAMMAR.value: Summary(0, 0),
+                "Reading": Summary(0, 0),
+                EnglishSkill.WRITING.value: Summary(0, 0),
+                EnglishSkill.SPELLING.value: Summary(0, 0),
+                MathSkill.ARITHMETIC.value: Summary(0, 0),
             }
 
-        challenges = st.session_state["summary"][skill.value][0] + 1
-        points = st.session_state["summary"][skill.value][1] + point
-        st.session_state["summary"][skill.value] = (challenges, points)
+        challenges = st.session_state["summary"][skill_key][0] + 1
+        points = st.session_state["summary"][skill_key][1] + point
+        st.session_state["summary"][skill_key] = (challenges, points)
 
     @staticmethod
     def get_summary_text():
@@ -96,5 +109,10 @@ class ProgressTracker:
             total_challenges += challenges
             total_points += points
             summary_text += f"<span style='font-size: small;'><b>{skill}</b>: <b>{challenges}</b> challenges, <b>{points}</b> points</span><br>"
-        summary_text += f"<br><span style='font-size: medium;'><b>Challenges: <b>{total_challenges}</b>, <b>Points: {total_points}</b></span><br>"
+        summary_text += "<hr style='margin-top: 0.5em; margin-bottom: 0.5em;'>"
+        summary_text += f"<span style='font-size: small;'><b>Total challenges: <b>{total_challenges}</b></span>"
+        summary_text += f"<br><span style='font-size: small;'><b>Total points: <b>{total_points}</b></span>"
+        summary_text += f"<br><span style='font-size: medium;'><b>Score: <b>{round((total_points * 100 / total_challenges), 2)}%</b></span> "
         return summary_text
+
+

@@ -71,6 +71,7 @@ def homepage(llm, stats):
     show_submit_and_next_challenge()
     evaluate(llm, topic, skill, question, answer)
     show_stats_and_rating(stats)
+    show_progress_tracking(llm)
     show_copyright()
 
 
@@ -97,21 +98,26 @@ def show_sidebar(llm):
     topic = get_topic()
     skill = get_skill(topic)
     level = get_level()
+    return topic, skill, level
+
+
+def show_progress_tracking(llm):
+    st.sidebar.markdown("<hr>", unsafe_allow_html=True)
+    st.sidebar.header("Session Scores")
+    name = get_name()
     email = get_email()
     send = show_send_summary()
+    session_scores = ProgressTracker.get_session_scores()
+    print(session_scores)
     if send:
-        session_scores = ProgressTracker.get_session_scores()
         if session_scores is not None:
             feedback = llm(prompts.ASSESSMENT_FEEDBACK_PROMPT.format(
                 session_scores=ProgressTracker.get_session_scores()))
             if ":" in feedback:
                 label, feedback = feedback.split(":", 1)
             print(feedback)
-            ProgressTracker.send_summary(email, feedback)
-    if ProgressTracker.get_session_scores() is not None:
-        st.sidebar.subheader("Session Scores:")
+            ProgressTracker.send_summary(name, email, feedback)
     st.sidebar.markdown(ProgressTracker.get_summary_text(), unsafe_allow_html=True)
-    return topic, skill, level
 
 
 def get_topic():
@@ -141,6 +147,10 @@ def get_level():
         "Select a difficulty level:",
         [level.value for level in Level]))
     return level
+
+
+def get_name():
+    return st.sidebar.text_input(label="Name:", key="name")
 
 
 def get_email():
@@ -308,6 +318,7 @@ def process_score(value):
         st.error("Keep trying! You can do better!")
     elif 0.5 < score <= 0.8:
         st.warning("Good job! Almost there!")
+        points = 0.5
     else:
         st.success("Great job!")
         points = 1
@@ -339,8 +350,8 @@ def show_app_stats(stats):
     plt.xlabel('Skill', fontsize=14)  # Increase the font size for x-axis label
     plt.ylabel('Count', fontsize=14)  # Increase the font size for y-axis label
     plt.title('App Stats', fontsize=16)  # Increase the font size for title
-    plt.xticks(rotation=45, fontsize=16)  # Increase the font size for x-axis tick labels
-    plt.yticks(fontsize=16)  # Increase the font size for y-axis tick labels
+    plt.xticks(rotation=45, fontsize=18)  # Increase the font size for x-axis tick labels
+    plt.yticks(fontsize=18)  # Increase the font size for y-axis tick labels
     plt.tight_layout()
 
     # Display the bar chart
@@ -388,7 +399,7 @@ def show_reviews(stats):
 
 def show_stats_and_rating(stats):
     # Define the column layout
-    col1, col2, col3, col4, col5 = st.columns((3, 1, 2, 1, 2))
+    col1, col2, col3, col4, col5 = st.columns((4, 0.5, 2.5, 0.5, 3))
 
     # Display the usage stats in the columns
     with col1:

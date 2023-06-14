@@ -268,7 +268,7 @@ def evaluate_math(llm, skill, question, answer):
         answer, value = round(float(answer), 2), round(float(value), 2)
         score = 1.0 if answer == value else 0.0
         response = f"Score: {score}\nCorrect answer: {value}"
-    process_response(response)
+    process_response(skill, question, answer, response)
 
 
 def evaluate_english(llm, skill, question, answer):

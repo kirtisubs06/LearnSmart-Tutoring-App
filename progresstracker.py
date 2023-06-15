@@ -3,7 +3,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from collections import namedtuple
-
+import pandas as pd
 from email_validator import EmailNotValidError, validate_email
 import streamlit as st
 
@@ -15,7 +15,7 @@ class ProgressTracker:
     def get_session_scores():
         summary = st.session_state.get("summary")
         if summary is None:
-            return {}
+            return None
 
         Summary = namedtuple('Summary', ['challenges', 'points'])
         session_scores = {
@@ -101,18 +101,56 @@ class ProgressTracker:
     def get_summary_text():
         summary = st.session_state.get("summary")
         if summary is None:
-            return ""
-        summary_text = ""
+            return "", ""
+
+        table_style = "border-collapse: collapse; width: 100%; border: 1px solid #ddd; " \
+                      "background-color: #E6F1F6; color: white;"
+        header_style = "background-color: #A6C9E2; font-weight: bold; padding: 0px 0; text-align: center; " \
+                       "border-bottom: 2px solid #ddd; font-size: 12px; color: white;"
+        cell_style = "padding: 3px; text-align: left; border-bottom: 1px solid #ddd; font-size: 12px; color: black;"
+
+        table_data = []
         total_challenges = 0
         total_points = 0
+
         for skill, (challenges, points) in summary.items():
             total_challenges += challenges
             total_points += points
-            summary_text += f"<span style='font-size: small;'><b>{skill}</b>: <b>{challenges}</b> challenges, <b>{points}</b> points</span><br>"
-        summary_text += "<hr style='margin-top: 0.5em; margin-bottom: 0.5em;'>"
-        summary_text += f"<span style='font-size: small;'><b>Total challenges: <b>{total_challenges}</b></span>"
-        summary_text += f"<br><span style='font-size: small;'><b>Total points: <b>{total_points}</b></span>"
-        summary_text += f"<br><span style='font-size: medium;'><b>Score: <b>{round((total_points * 100 / total_challenges), 2)}%</b></span> "
-        return summary_text
+            table_data.append([skill, challenges, points])
+
+        df = pd.DataFrame(table_data, columns=["Skill", "Challenges", "Points"])
+        total_table_data = [
+            ["Total challenges:", total_challenges],
+            ["Total points:", total_points],
+            ["Score:", f"{round((total_points * 100 / total_challenges), 2)}%"]
+        ]
+        total_df = pd.DataFrame(total_table_data, columns=["Metric", "Value"])
+
+        skill_table = df.to_html(index=False, justify="left", border=0)
+        skill_table = skill_table.replace('<table', f'<table style="{table_style}"')
+        skill_table = skill_table.replace('<th', f'<th style="{header_style}"')
+        skill_table = skill_table.replace('<td', f'<td style="{cell_style}"')
+
+        total_table = total_df.to_html(index=False, justify="left", border=0)
+        total_table = total_table.replace('<table', f'<table style="{table_style}"')
+        total_table = total_table.replace('<th', f'<th style="{header_style}"')
+        total_table = total_table.replace('<td', f'<td style="{cell_style}"')
+
+        return skill_table, total_table
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

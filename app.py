@@ -5,6 +5,7 @@ import streamlit as st
 from langchain.llms import AzureOpenAI
 from langchain import LLMMathChain
 from matplotlib import pyplot as plt
+from streamlit import components
 
 import prompts
 from progresstracker import ProgressTracker
@@ -34,6 +35,7 @@ def main():
     stats = Stats()
     stats.connect()
     homepage(llm, stats)
+    stats.close()
 
 
 def set_env():
@@ -70,6 +72,7 @@ def homepage(llm, stats):
     answer = get_answer(skill)
     show_submit_and_next_challenge()
     evaluate(llm, topic, skill, question, answer)
+    show_summary()
     show_stats_and_rating(stats)
     show_progress_tracking(llm)
     show_copyright()
@@ -101,23 +104,37 @@ def show_sidebar(llm):
     return topic, skill, level
 
 
+def show_summary():
+    session_scores = ProgressTracker.get_session_scores()
+    if session_scores is not None:
+        st.markdown("<hr style='margin-top: 0.5em; margin-bottom: 0.5em;'>", unsafe_allow_html=True)
+        st.subheader("Session Scores")
+
+        # Get the tables as separate HTML strings
+        skill_table, total_table = ProgressTracker.get_summary_text()
+
+        # Display the tables side by side using columns
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown(skill_table, unsafe_allow_html=True)
+        with col2:
+            st.markdown(total_table, unsafe_allow_html=True)
+
+
 def show_progress_tracking(llm):
-    st.sidebar.markdown("<hr>", unsafe_allow_html=True)
-    st.sidebar.header("Session Scores")
+    st.sidebar.markdown("<hr style='margin-top: 0.5em; margin-bottom: 0.5em;'>", unsafe_allow_html=True)
     name = get_name()
     email = get_email()
     send = show_send_summary()
     session_scores = ProgressTracker.get_session_scores()
-    print(session_scores)
     if send:
         if session_scores is not None:
             feedback = llm(prompts.ASSESSMENT_FEEDBACK_PROMPT.format(
-                session_scores=ProgressTracker.get_session_scores()))
+                session_scores=session_scores))
             if ":" in feedback:
                 label, feedback = feedback.split(":", 1)
             print(feedback)
             ProgressTracker.send_summary(name, email, feedback)
-    st.sidebar.markdown(ProgressTracker.get_summary_text(), unsafe_allow_html=True)
 
 
 def get_topic():
@@ -398,9 +415,9 @@ def show_reviews(stats):
 
 
 def show_stats_and_rating(stats):
+    st.markdown("<br><hr style='margin-top: 0.5em; margin-bottom: 0.5em;'>", unsafe_allow_html=True)
     # Define the column layout
     col1, col2, col3, col4, col5 = st.columns((4, 0.5, 2.5, 0.5, 3))
-
     # Display the usage stats in the columns
     with col1:
         show_app_stats(stats)

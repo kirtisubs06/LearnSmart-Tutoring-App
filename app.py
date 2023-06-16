@@ -111,7 +111,8 @@ def show_summary():
         st.subheader("Session Scores")
 
         # Get the tables as separate HTML strings
-        skill_table, total_table = ProgressTracker.get_summary_text()
+        skill_table, total_table, vocabulary_words, grammar_sentences, spelling_words, writing_prompts = \
+            ProgressTracker.get_summary_text()
 
         # Display the tables side by side using columns
         col1, col2 = st.columns(2)
@@ -321,7 +322,7 @@ def process_response(skill, question, answer, response):
 def process(skill, question, answer, key, value):
     if key == "Score":
         points = process_score(value)
-        ProgressTracker.add_skill_track(skill, points)
+        ProgressTracker.add_skill_track(skill, question, points)
     else:
         st.write(f"**{key}:**")
         st.write(value)

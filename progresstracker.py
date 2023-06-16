@@ -56,36 +56,36 @@ class ProgressTracker:
 
         today = date.today().strftime("%Y-%m-%d")
         html_template = """
-                <html>
-                <head>
-                    <style>
-                        body {{ font-family: Arial, sans-serif; }}
-                        .main-title {{ color: black; font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center;}}
-                        .section-title {{ color: black; padding: 5px; font-size: 18px; font-weight: bold; margin-top: 20px; text-align: center; border-bottom: 0px solid #999;}}
-                        .assessment-section {{ margin-top: 20px; }}
-                        .question-section {{ margin-top: 20px; }}
-                        .date {{ text-align: right; font-size: 14px; font-weight: bold;}}
-                    </style>
-                </head>
-                <body>
-                    <div class="main-title">Assessment Report</div>
-                    <div class="date">{today}</div>
-                    <div class="section-title">Skills scores</div>
-                    <div>{skill_table}</div>
-                    <br>
-                    <div class="section-title">Total score</div>
-                    <div>{summary_table}</div>
-                    <br><br>
-                    <div class="section-title">Assessment</div>
-                    <div class="assessment-section">{assessment}</div>
-                    <div class="section-title">Questions</div>
-                    <div class="question-section"><b>Vocabulary words: </b>{vocabulary_words}</div>
-                    <div class="question-section"><b>Grammar sentences:</b><br>{grammar_sentences}</div>
-                    <div class="question-section"><b>Writing prompts: </b><br>{writing_prompts}</div>
-                    <div class="question-section"><b>Spelling words: </b>{spelling_words}</div>
-                </body>
-                </html>
-                """
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: Arial, sans-serif; }}
+                    .main-title {{ color: black; font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center;}}
+                    .section-title {{ color: black; padding: 5px; font-size: 18px; font-weight: bold; margin-top: 20px; text-align: center; border-bottom: 0px solid #999;}}
+                    .assessment-section {{ margin-top: 20px; }}
+                    .question-section {{ margin-top: 20px; }}
+                    .date {{ text-align: center; font-size: 14px; font-weight: bold;}}
+                </style>
+            </head>
+            <body>
+                <div class="main-title">Assessment Report</div>
+                <div class="date">{today}</div>
+                <div class="section-title">Skills scores</div>
+                <div>{skill_table}</div>
+                <br>
+                <div class="section-title">Total score</div>
+                <div>{summary_table}</div>
+                <br><br>
+                <div class="section-title">Assessment</div>
+                <div class="assessment-section">{assessment}</div>
+                <div class="section-title">Questions</div>
+                <div class="question-section"><b>Vocabulary words: </b>{vocabulary_words}</div>
+                <div class="question-section"><b>Grammar sentences:</b><br>{grammar_sentences}</div>
+                <div class="question-section"><b>Writing prompts: </b><br>{writing_prompts}</div>
+                <div class="question-section"><b>Spelling words: </b>{spelling_words}</div>
+            </body>
+            </html>
+            """
 
         html = html_template.format(
             today=today,
@@ -117,6 +117,8 @@ class ProgressTracker:
             server.starttls()
             server.login(os.environ["EMAIL_ID"], os.environ["EMAIL_PASSWORD"])
             server.send_message(message)
+
+        os.remove(filename)
 
     @staticmethod
     def add_skill_track(skill, question, point):

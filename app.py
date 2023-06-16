@@ -184,7 +184,8 @@ def initialize_session(stats, topic, skill, level):
     session_start = "topic" not in st.session_state or \
                     "skill" not in st.session_state or \
                     "level" not in st.session_state
-    stats.increment_session_counter()
+    if session_start:
+        stats.increment_session_counter()
     topic_changed = st.session_state.get("topic") != topic
     skill_changed = st.session_state.get("skill") != skill
     level_changed = st.session_state.get("level") != level

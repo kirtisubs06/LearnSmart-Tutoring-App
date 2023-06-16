@@ -60,10 +60,10 @@ def homepage(llm, stats):
     topic_changed, skill_changed, level_changed = \
         initialize_session(stats, topic, skill, level)
     show_lesson(skill)
-
     label = st.session_state["question"][0]
     question = st.session_state["question"][1]
     next_challenge = st.session_state["next_challenge"]
+    name_or_email_changed = st.session_state["name_or_email_changed"]
     if next_challenge or topic_changed or skill_changed or level_changed:
         clear_answer()
         label, question = get_question(llm, stats, skill, level)
@@ -71,7 +71,8 @@ def homepage(llm, stats):
     show_question(skill, label, question)
     answer = get_answer(skill)
     show_submit_and_next_challenge()
-    evaluate(llm, topic, skill, question, answer)
+    if not name_or_email_changed:
+        evaluate(llm, topic, skill, question, answer)
     show_summary()
     show_stats_and_rating(stats)
     show_progress_tracking(llm)
@@ -167,12 +168,16 @@ def get_level():
     return level
 
 
+def name_or_email_entered():
+    st.session_state["name_or_email_changed"] = True
+
+
 def get_name():
-    return st.sidebar.text_input(label="Name:", key="name")
+    return st.sidebar.text_input(label="Name:", key="name", on_change=name_or_email_entered)
 
 
 def get_email():
-    return st.sidebar.text_input(label="Email:", key="email")
+    return st.sidebar.text_input(label="Email:", key="email", on_change=name_or_email_entered)
 
 
 def initialize_session(stats, topic, skill, level):
@@ -192,6 +197,9 @@ def initialize_session(stats, topic, skill, level):
         st.session_state["question"] = None, None
         st.session_state["next_challenge"] = True
 
+    if "name_or_email_changed" not in st.session_state:
+        st.session_state["name_or_email_changed"] = False
+
     return topic_changed, skill_changed, level_changed
 
 
@@ -204,14 +212,19 @@ def show_next_challenge():
     return st.button(f"Next challenge", on_click=clear_answer, type="primary")
 
 
+def send_summary_clicked():
+    st.session_state["name_or_email_changed"] = True
+
+
 def show_send_summary():
-    return st.sidebar.button(f"Send summary", type="primary")
+    return st.sidebar.button(f"Send summary", type="primary", on_click=send_summary_clicked)
 
 
 def clear_answer():
     st.session_state["answer"] = ""
     st.session_state["numeric_answer"] = 0.0
     st.session_state["next_challenge"] = True
+    st.session_state["name_or_email_changed"] = False
 
 
 def clear_next_challenge():

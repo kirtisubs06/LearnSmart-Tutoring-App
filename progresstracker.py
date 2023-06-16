@@ -95,7 +95,7 @@ class ProgressTracker:
             vocabulary_words=', '.join(vocabulary_words),
             grammar_sentences='<br>'.join(grammar_sentences),
             writing_prompts='<br>'.join(writing_prompts),
-            spelling_words='.'.join(spelling_words)
+            spelling_words=', '.join(spelling_words)
         )
 
         filename = f"{name}-assessment-{today}.pdf"

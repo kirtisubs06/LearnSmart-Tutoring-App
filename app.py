@@ -398,7 +398,7 @@ def show_app_stats(stats):
 
 def show_review_form(stats):
     st.markdown("<h1 style='font-size: 24px;'>Rate App</h1>", unsafe_allow_html=True)
-    rating = st.slider("Scale", 1, 5, 3, key="slider_rating", format="%d",
+    rating = st.slider("Scale", 1, 5, 5, key="slider_rating", format="%d",
                        help="Drag the slider to rate the app")
     comment = st.text_input("Please leave any comments or suggestions for improvement:")
     if st.button("Submit Review", key="submit", type="primary"):

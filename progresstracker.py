@@ -61,7 +61,7 @@ class ProgressTracker:
         a_problems = '<br>'.join(arithmetic_problems)
 
         today = date.today().strftime("%Y-%m-%d")
-        html_template = f"""
+        html = f"""
             <html>
             <head>
                 <style>
@@ -85,7 +85,7 @@ class ProgressTracker:
                 <div class="section-title">Assessment</div>
                 <div class="assessment-section">{assessment}</div>
                 <div class="section-title">Questions</div>
-                <div class="question-section"><b>Vocabulary words: </b>{v_words}</div>
+                <div class="question-section"><b>Vocabulary words: </b><br>{v_words}</div>
                 <div class="question-section"><b>Grammar sentences:</b><br>{g_sentences}</div>
                 <div class="question-section"><b>Writing prompts: </b><br>{w_prompts}</div>
                 <div class="question-section"><b>Spelling words: </b><br>{s_words}</div>
@@ -94,20 +94,6 @@ class ProgressTracker:
             </html>
             """
 
-        """
-        html = html_template.format(
-            today=today,
-            skill_table=skill_table,
-            summary_table=summary_table,
-            assessment=assessment,
-            vocabulary_words=', '.join(vocabulary_words),
-            grammar_sentences='<br>'.join(grammar_sentences),
-            writing_prompts='<br>'.join(writing_prompts),
-            spelling_words=', '.join(spelling_words),
-            arithmetic_problems=', '.join(arithmetic_problems)
-        )
-        """
-        html = html_template
         filename = f"{name}-assessment-{today}.pdf"
         pdfkit.from_string(html, filename)
 

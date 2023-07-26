@@ -112,7 +112,7 @@ def show_summary():
         st.subheader("Session Scores")
 
         # Get the tables as separate HTML strings
-        skill_table, total_table, vocabulary_words, grammar_sentences, spelling_words, writing_prompts = \
+        skill_table, total_table, vocabulary_words, grammar_sentences, spelling_words, writing_prompts, arithmetic_problems = \
             ProgressTracker.get_summary_text()
 
         # Display the tables side by side using columns

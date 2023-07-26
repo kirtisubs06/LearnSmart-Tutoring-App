@@ -47,15 +47,21 @@ class ProgressTracker:
         if name == "" or email == "":
             return
 
-        skill_table, summary_table, vocabulary_words, grammar_sentences, spelling_words, writing_prompts = \
+        skill_table, summary_table, vocabulary_words, grammar_sentences, spelling_words, writing_prompts, arithmetic_problems = \
             ProgressTracker.get_summary_text()
 
         if skill_table == "" or summary_table == "":
             st.sidebar.error("No summary available")
             return
 
+        v_words = ', '.join(vocabulary_words)
+        g_sentences = '<br>'.join(grammar_sentences)
+        w_prompts = '<br>'.join(writing_prompts)
+        s_words = ', '.join(spelling_words)
+        a_problems = '<br>'.join(arithmetic_problems)
+
         today = date.today().strftime("%Y-%m-%d")
-        html_template = """
+        html_template = f"""
             <html>
             <head>
                 <style>
@@ -79,14 +85,16 @@ class ProgressTracker:
                 <div class="section-title">Assessment</div>
                 <div class="assessment-section">{assessment}</div>
                 <div class="section-title">Questions</div>
-                <div class="question-section"><b>Vocabulary words: </b>{vocabulary_words}</div>
-                <div class="question-section"><b>Grammar sentences:</b><br>{grammar_sentences}</div>
-                <div class="question-section"><b>Writing prompts: </b><br>{writing_prompts}</div>
-                <div class="question-section"><b>Spelling words: </b>{spelling_words}</div>
+                <div class="question-section"><b>Vocabulary words: </b>{v_words}</div>
+                <div class="question-section"><b>Grammar sentences:</b><br>{g_sentences}</div>
+                <div class="question-section"><b>Writing prompts: </b><br>{w_prompts}</div>
+                <div class="question-section"><b>Spelling words: </b><br>{s_words}</div>
+                <div class="question-section"><b>Arithmetic problems: </b><br>{a_problems}</div>
             </body>
             </html>
             """
 
+        """
         html = html_template.format(
             today=today,
             skill_table=skill_table,
@@ -95,9 +103,11 @@ class ProgressTracker:
             vocabulary_words=', '.join(vocabulary_words),
             grammar_sentences='<br>'.join(grammar_sentences),
             writing_prompts='<br>'.join(writing_prompts),
-            spelling_words=', '.join(spelling_words)
+            spelling_words=', '.join(spelling_words),
+            arithmetic_problems=', '.join(arithmetic_problems)
         )
-
+        """
+        html = html_template
         filename = f"{name}-assessment-{today}.pdf"
         pdfkit.from_string(html, filename)
 
@@ -139,7 +149,8 @@ class ProgressTracker:
                 "vocabulary_words": [],
                 "spelling_words": [],
                 "writing_prompts": [],
-                "grammar_sentences": []
+                "grammar_sentences": [],
+                "arithmetic_problems": []
             }
 
         challenges = st.session_state["summary"][skill_key].challenges + 1
@@ -153,6 +164,8 @@ class ProgressTracker:
             st.session_state["questions"]["writing_prompts"].append(question)
         elif skill is EnglishSkill.SPELLING:
             st.session_state["questions"]["spelling_words"].append(question)
+        elif skill is MathSkill.ARITHMETIC:
+            st.session_state["questions"]["arithmetic_problems"].append(question)
 
     @staticmethod
     def get_summary_text():
@@ -198,4 +211,4 @@ class ProgressTracker:
         total_table = total_table.replace('<td', f'<td style="{cell_style}"')
 
         return skill_table, total_table, questions["vocabulary_words"], questions["grammar_sentences"], \
-               questions["spelling_words"], questions["writing_prompts"]
+               questions["spelling_words"], questions["writing_prompts"], questions["arithmetic_problems"]

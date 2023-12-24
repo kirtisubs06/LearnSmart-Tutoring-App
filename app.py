@@ -1,4 +1,5 @@
 import os
+import random
 import tempfile
 
 import streamlit as st
@@ -8,6 +9,7 @@ from matplotlib import pyplot as plt
 from streamlit import components
 
 import prompts
+from defaultquestions import default_questions
 from progresstracker import ProgressTracker
 from level import Level
 from skill import EnglishSkill, MathSkill
@@ -57,6 +59,12 @@ def set_env():
 def homepage(llm, stats):
     show_app_title_and_introduction(stats)
     topic, skill, level = show_sidebar(llm)
+
+    # Handle the case when default options are selected
+    if topic is None or skill is None or level is None:
+        st.sidebar.warning("Please select a topic, skill, and level to continue.")
+        return
+
     topic_changed, skill_changed, level_changed = \
         initialize_session(stats, topic, skill, level)
     show_lesson(skill)
@@ -140,32 +148,26 @@ def show_progress_tracking(llm):
 
 
 def get_topic():
-    topic = Topic.from_value(st.sidebar.selectbox(
-        "Select a topic:",
-        [topic.value for topic in Topic]))
-    return topic
+    selected_topic = st.sidebar.selectbox("Select a topic:", [topic.value for topic in Topic])
+    return Topic.from_value(selected_topic)
 
 
 def get_skill(topic):
     skill = None
     if topic is Topic.ENGLISH:
-        skill = EnglishSkill.from_value(st.sidebar.selectbox(
-            "Select a skill:",
-            [skill.value for skill in EnglishSkill]
-        ))
+        selected_skill = st.sidebar.selectbox("Select a skill:", [skill.value for skill in EnglishSkill])
+        skill = EnglishSkill.from_value(selected_skill)
+
     elif topic is Topic.MATH:
-        skill = MathSkill.from_value(st.sidebar.selectbox(
-            "Select a skill:",
-            [skill.value for skill in MathSkill]
-        ))
+        selected_skill = st.sidebar.selectbox("Select a skill:", [skill.value for skill in MathSkill])
+        skill = MathSkill.from_value(selected_skill)
+
     return skill
 
 
 def get_level():
-    level = Level.from_value(st.sidebar.selectbox(
-        "Select a difficulty level:",
-        [level.value for level in Level]))
-    return level
+    selected_level = st.sidebar.selectbox("Select a difficulty level:", [level.value for level in Level])
+    return Level.from_value(selected_level)
 
 
 def name_or_email_entered():
@@ -233,11 +235,25 @@ def clear_next_challenge():
 
 
 def get_question(llm, stats, skill, level):
-    stats.increment_stats_counters(skill, level)
-    response = llm(skill.question_generation_prompt.format(level=level))
-    label, question = process_question(response)
-    st.session_state["question"] = (label, question)
-    return label, question
+    try:
+        stats.increment_stats_counters(skill, level)
+        response = llm(skill.question_generation_prompt.format(level=level))
+        label, question = process_question(response)
+        st.session_state["question"] = (label, question)
+        return label, question
+    except Exception as e:
+        # Check if default questions are available for the skill and level
+        skill_key = skill.value
+        level_key = level.value
+        if skill_key in default_questions and level_key in default_questions[skill_key]:
+            # Randomly select a default question
+            default_label, default_question = random.choice(default_questions[skill_key][level_key])
+            st.session_state["question"] = (default_label, default_question)
+            st.warning("LLM endpoint is currently unavailable. A question from the default set is provided.")
+            return default_label, default_question
+        else:
+            st.warning(f"LLM endpoint is currently unavailable. Please try again later.")
+            return None, None
 
 
 def show_question(skill, label, question):
@@ -295,10 +311,38 @@ def show_submit_and_next_challenge():
 def evaluate(llm, topic, skill, question, answer):
     if not answer:
         return
+
+    # Check if the question is from the default set
+    default_answer = get_default_answer(skill, question)
+    if default_answer is not None:
+        evaluate_default(skill, question, answer, default_answer)
+        return
+
+    # If the question is not from the default set, proceed with LLM evaluation
     if topic is Topic.MATH:
         evaluate_math(llm, skill, question, answer)
     elif topic is Topic.ENGLISH:
         evaluate_english(llm, skill, question, answer)
+
+
+def get_default_answer(skill, question):
+    # Retrieve the level from session state or other means
+    level = st.session_state.get("level").value if "level" in st.session_state else None
+    print(level, skill.value)
+    if level and skill.value in default_questions and level in default_questions[skill.value]:
+        for q, a in default_questions[skill.value][level]:
+            if q == question:
+                return a
+    return None
+
+
+def evaluate_default(skill, question, user_answer, correct_answer):
+    if user_answer.strip().lower() == correct_answer.lower():
+        st.success("Correct answer!")
+        # Add logic to update progress or scores
+    else:
+        st.error(f"Incorrect. The correct answer is: {correct_answer}")
+        # Add logic for incorrect answer handling
 
 
 def evaluate_math(llm, skill, question, answer):

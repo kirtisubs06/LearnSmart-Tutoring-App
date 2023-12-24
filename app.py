@@ -6,7 +6,6 @@ import streamlit as st
 from langchain.llms import AzureOpenAI
 from langchain import LLMMathChain
 from matplotlib import pyplot as plt
-from streamlit import components
 
 import prompts
 from defaultquestions import default_questions
@@ -58,6 +57,7 @@ def set_env():
 
 def homepage(llm, stats):
     show_app_title_and_introduction(stats)
+    initialize_llm_exception_flag(llm)
     topic, skill, level = show_sidebar(llm)
 
     # Handle the case when default options are selected
@@ -77,6 +77,7 @@ def homepage(llm, stats):
         label, question = get_question(llm, stats, skill, level)
         clear_next_challenge()
     show_question(skill, label, question)
+    print("Question", question)
     answer = get_answer(skill)
     show_submit_and_next_challenge()
     if not name_or_email_changed:
@@ -87,22 +88,34 @@ def homepage(llm, stats):
     show_copyright()
 
 
+def initialize_llm_exception_flag(llm):
+    if 'llm_exception' not in st.session_state:
+        st.session_state['llm_exception'] = False
+    test_skill = EnglishSkill.VOCABULARY
+    test_level = Level.EASY
+    try:
+        llm(test_skill.question_generation_prompt.format(level=test_level))
+    except Exception as e:
+        st.session_state['llm_exception'] = True
+
+
 def show_app_title_and_introduction(stats):
     total_challenges = stats.get_total_counters()
     total_sessions = stats.get_session_counter()
     st.title("Welcome to LearnSmart!")
-    st.write(f"""
-        LearnSmart is an interactive app that helps you enhance your English and Math skills. 
+    st.markdown(f"""
+        <p>LearnSmart is an interactive app that helps you enhance your English and Math skills. 
         Dive into a collection of practice exercises, covering various skills, to strengthen your knowledge 
-        and understanding of these subjects.
+        and understanding of these subjects.</p>
 
-        Whether you're a student or someone wanting to sharpen your skills, LearnSmart provides a comprehensive 
+        <p>Whether you're a student or someone wanting to sharpen your skills, LearnSmart provides a comprehensive 
         learning experience. From grammar and vocabulary to problem-solving and mathematical concepts, explore 
         a wide range of topics and level up your abilities. Join hundreds of learners who have completed 
-        **{total_sessions}** sessions and conquered **{total_challenges}** challenges. 
-        
-        Start your learning journey with LearnSmart today and unlock your full potential in English and Math!
-    """)
+        <span style='font-size: 20px;'><b>{total_sessions}</b></span> sessions and conquered 
+        <span style='font-size: 20px;'><b>{total_challenges}</b></span> challenges.</p>
+
+        <p>Start your learning journey with LearnSmart today and unlock your full potential in English and Math!</p>
+        """, unsafe_allow_html=True)
 
 
 def show_sidebar(llm):
@@ -154,12 +167,21 @@ def get_topic():
 
 def get_skill(topic):
     skill = None
+
     if topic is Topic.ENGLISH:
-        selected_skill = st.sidebar.selectbox("Select a skill:", [skill.value for skill in EnglishSkill])
+        if not st.session_state['llm_exception']:
+            # Show all English skills if LLM is available
+            english_skills = [skill.value for skill in EnglishSkill]
+        else:
+            # Show limited English skills if LLM is unavailable
+            english_skills = ['Spelling', 'Grammar']
+
+        selected_skill = st.sidebar.selectbox("Select an English skill:", english_skills)
         skill = EnglishSkill.from_value(selected_skill)
 
     elif topic is Topic.MATH:
-        selected_skill = st.sidebar.selectbox("Select a skill:", [skill.value for skill in MathSkill])
+        # Always show all Math skills
+        selected_skill = st.sidebar.selectbox("Select a Math skill:", [skill.value for skill in MathSkill])
         skill = MathSkill.from_value(selected_skill)
 
     return skill
@@ -235,25 +257,32 @@ def clear_next_challenge():
 
 
 def get_question(llm, stats, skill, level):
+    stats.increment_stats_counters(skill, level)
+    if st.session_state['llm_exception']:
+        question = get_default_question(skill, level)
+        st.session_state["question"] = (skill.label, question)
+        return st.session_state["question"]
     try:
-        stats.increment_stats_counters(skill, level)
         response = llm(skill.question_generation_prompt.format(level=level))
         label, question = process_question(response)
         st.session_state["question"] = (label, question)
         return label, question
     except Exception as e:
-        # Check if default questions are available for the skill and level
-        skill_key = skill.value
-        level_key = level.value
-        if skill_key in default_questions and level_key in default_questions[skill_key]:
-            # Randomly select a default question
-            default_label, default_question = random.choice(default_questions[skill_key][level_key])
-            st.session_state["question"] = (default_label, default_question)
-            st.warning("LLM endpoint is currently unavailable. A question from the default set is provided.")
-            return default_label, default_question
-        else:
-            st.warning(f"LLM endpoint is currently unavailable. Please try again later.")
-            return None, None
+        st.session_state['llm_exception'] = True
+        return get_default_question(skill, level)
+
+
+def get_default_question(skill, level):
+    skill_key = skill.value
+    level_key = level.value
+    if skill_key in default_questions and level_key in default_questions[skill_key]:
+        default_question = random.choice(default_questions[skill_key][level_key])[0]
+        st.session_state["question"] = default_question
+        print(default_question)
+        return default_question
+    else:
+        st.error("No default questions available for this skill and level.")
+        return None, None
 
 
 def show_question(skill, label, question):
@@ -309,6 +338,7 @@ def show_submit_and_next_challenge():
 
 
 def evaluate(llm, topic, skill, question, answer):
+    print("Evaluating. Question:", question, "Answer:", answer)
     if not answer:
         return
 
@@ -328,7 +358,7 @@ def evaluate(llm, topic, skill, question, answer):
 def get_default_answer(skill, question):
     # Retrieve the level from session state or other means
     level = st.session_state.get("level").value if "level" in st.session_state else None
-    print(level, skill.value)
+    print(level, skill.value, question)
     if level and skill.value in default_questions and level in default_questions[skill.value]:
         for q, a in default_questions[skill.value][level]:
             if q == question:
@@ -337,12 +367,18 @@ def get_default_answer(skill, question):
 
 
 def evaluate_default(skill, question, user_answer, correct_answer):
-    if user_answer.strip().lower() == correct_answer.lower():
-        st.success("Correct answer!")
-        # Add logic to update progress or scores
+    if skill is MathSkill.ARITHMETIC:
+        user_answer_float = float(user_answer)
+        correct_answer_float = float(correct_answer)
+        if user_answer_float == correct_answer_float:
+            process(skill, question, user_answer, "Score", 1)
+        else:
+            process(skill, question, user_answer, "Score", 0)
     else:
-        st.error(f"Incorrect. The correct answer is: {correct_answer}")
-        # Add logic for incorrect answer handling
+        if user_answer.strip().lower() == correct_answer.lower():
+            process(skill, question, user_answer, "Score", 1)
+        else:
+            process(skill, question, user_answer, "Score", 0)
 
 
 def evaluate_math(llm, skill, question, answer):
@@ -436,7 +472,7 @@ def show_app_stats(stats):
     # Display skill and count as text line by line
     text = ""
     for skill, count in zip(skills, counts):
-        text += f"<span style='font-size: smaller;'>{skill}: <b>{count}</b> challenges</span><br>"
+        text += f"<span style='font-size: medium;'>{skill}: <b>{count}</b> challenges</span><br>"
     st.markdown(text, unsafe_allow_html=True)
 
 

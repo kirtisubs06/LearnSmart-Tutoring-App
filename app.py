@@ -96,6 +96,7 @@ def initialize_llm_exception_flag(llm):
     try:
         llm(test_skill.question_generation_prompt.format(level=test_level))
     except Exception as e:
+        print(e)
         st.session_state['llm_exception'] = True
 
 
@@ -152,12 +153,15 @@ def show_progress_tracking(llm):
     session_scores = ProgressTracker.get_session_scores()
     if send:
         if session_scores is not None:
-            feedback = llm(prompts.ASSESSMENT_FEEDBACK_PROMPT.format(
-                session_scores=session_scores))
-            if ":" in feedback:
-                label, feedback = feedback.split(":", 1)
-            print(feedback)
+            if not st.session_state['llm_exception']:
+                feedback = llm(prompts.ASSESSMENT_FEEDBACK_PROMPT.format(
+                    session_scores=session_scores))
+                if ":" in feedback:
+                    label, feedback = feedback.split(":", 1)
+            else:
+                feedback = session_scores
             ProgressTracker.send_summary(name, email, feedback)
+            st.sidebar.success("Assessment report sent successfully")
 
 
 def get_topic():
@@ -268,6 +272,7 @@ def get_question(llm, stats, skill, level):
         st.session_state["question"] = (label, question)
         return label, question
     except Exception as e:
+        print(e)
         st.session_state['llm_exception'] = True
         return get_default_question(skill, level)
 

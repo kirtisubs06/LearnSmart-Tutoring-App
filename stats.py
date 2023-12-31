@@ -101,6 +101,7 @@ class Stats:
         cursor = self.connection.cursor()
         cursor.execute("SELECT COUNT(*), AVG(score) FROM reviews")
         result = cursor.fetchone()
+        cursor.close()
         num_reviews = result[0]
         avg_rating = round(result[1], 1) if result[1] is not None else 0.0
         return num_reviews, avg_rating
@@ -112,7 +113,34 @@ class Stats:
         cursor.close()
         return top_reviews
 
+    def store_api_key(self, vendor_name: str, api_key: str):
+        cursor = self.connection.cursor()
+        cursor.execute(
+            """
+            INSERT INTO api_keys (vendor_name, api_key)
+            VALUES (%s, %s)
+            ON DUPLICATE KEY UPDATE api_key = VALUES(api_key)
+            """,
+            (vendor_name, api_key)
+        )
+        self.connection.commit()
+        cursor.close()
+
+    def get_api_key(self, vendor_name: str):
+        cursor = self.connection.cursor()
+        cursor.execute(
+            """
+            SELECT api_key FROM api_keys
+            WHERE vendor_name = %s
+            """,
+            (vendor_name,)
+        )
+        api_key = cursor.fetchone()
+        cursor.close()
+        return api_key[0] if api_key else None
+
     def close(self):
         if self.connection is not None:
             self.connection.close()
             print("Connection to MySQL database closed.")
+

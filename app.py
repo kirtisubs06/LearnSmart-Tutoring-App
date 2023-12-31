@@ -17,10 +17,10 @@ from topic import Topic
 from gtts import gTTS
 
 
-def load_llm(temperature):
+def load_llm(api_key, temperature):
     os.environ["OPENAI_API_TYPE"] = st.secrets["OPENAI_API_TYPE"]
     os.environ["OPENAI_API_BASE"] = st.secrets["OPENAI_API_BASE"]
-    os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+    os.environ["OPENAI_API_KEY"] = api_key
     os.environ["DEPLOYMENT_NAME"] = st.secrets["DEPLOYMENT_NAME"]
     os.environ["OPENAI_API_VERSION"] = st.secrets["OPENAI_API_VERSION"]
     os.environ["MODEL_NAME"] = st.secrets["MODEL_NAME"]
@@ -29,12 +29,17 @@ def load_llm(temperature):
                        model_name=os.environ["MODEL_NAME"])
 
 
+def get_api_key():
+    return st.secrets["OPENAI_API_KEY"]
+
+
 def main():
     st.set_page_config(page_title="Learning Smart", layout="wide")
     set_env()
-    llm = load_llm(0.9)
     stats = Stats()
     stats.connect()
+    api_key = stats.get_api_key("openai")
+    llm = load_llm(api_key, 0.9)
     homepage(llm, stats)
     stats.close()
 
@@ -399,6 +404,8 @@ def evaluate_math(llm, skill, question, answer):
 
 
 def evaluate_english(llm, skill, question, answer):
+    print(">> evaluate: question:", question)
+    print(">> evaluate: answer:", answer)
     response = llm(skill.answer_evaluation_prompt.format(question=question, answer=answer))
     process_response(skill, question, answer, response)
 
